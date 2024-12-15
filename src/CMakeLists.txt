@@ -1,7 +1,7 @@
 set(
     SOURCES
-    src/core/complex.cpp
-    src/core/diagram.cpp
-    src/core/pairing.cpp
-    src/core/simplex.cpp
+    src/core/index_matrix.cpp
+    src/vertices/base.cpp
+    src/vertices/point.cpp
+    src/generator.cpp
 )

@@ -1,5 +1,5 @@
 add_executable(
-    test_algo
-    tests/test_diagram.cpp
+    tests
+    tests/test_pairing.cpp
     ${SOURCES}
 )

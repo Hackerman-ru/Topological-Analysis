@@ -46,9 +46,9 @@ include(src/CMakeLists.txt)
 include(tests/CMakeLists.txt)
 
 target_link_libraries(
-  test_algo
+  tests
   GTest::gtest_main
 )
 
 include(GoogleTest)
-gtest_discover_tests(test_algo)
+gtest_discover_tests(tests)

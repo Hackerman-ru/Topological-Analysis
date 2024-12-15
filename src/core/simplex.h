@@ -1,24 +1,22 @@
 #ifndef __SIMPLEX_H__
 #define __SIMPLEX_H__
 
+#include "util.h"
+
 #include <algorithm>
-#include <format>
 #include <functional>
-#include <initializer_list>
-#include <inttypes.h>
 #include <string>
 #include <vector>
 
+template<typename Vertex>
 class Simplex {
 public:
-    using Vertex = uint32_t;
-
-    constexpr Simplex(std::vector<Vertex> vertices) : m_vertices(std::move(vertices)) {
+    Simplex(std::vector<Vertex> vertices) : m_vertices(std::move(vertices)) {
         std::sort(m_vertices.begin(), m_vertices.end());
     }
 
     template<typename T>
-    constexpr Simplex(std::initializer_list<T> vertices) {
+    Simplex(std::initializer_list<T> vertices) {
         m_vertices.reserve(vertices.size());
         for (const auto& vertex : vertices) {
             m_vertices.push_back(vertex);
@@ -35,44 +33,55 @@ public:
         return lhs.m_vertices <=> rhs.m_vertices;
     }
 
-    std::string to_string() const;
-    size_t dimension() const;
-    std::vector<Simplex> subsimplices() const;
-    const std::vector<Simplex::Vertex>& vertices() const;
-
-private:
-    friend class std::hash<Simplex>;
-
-    std::vector<Vertex> m_vertices;
-};
-
-template<>
-struct std::hash<Simplex> {
-public:
-    size_t operator()(const Simplex& simplex) const {
-        size_t result = 0;
-        for (const auto& vertex : simplex.m_vertices) {
-            cantor(result, vertex);
+    std::string to_string() const {
+        std::string result = "{";
+        for (const auto& vertex : m_vertices) {
+            result += vertex.to_string() + ",";
         }
+        if (dimension() > 0) {
+            result.pop_back();
+        }
+        result += '}';
         return result;
     }
 
-private:
-    size_t cantor(size_t lhs, size_t rhs) const {
-        return ((lhs + rhs + 1) * (lhs + rhs) >> 1) + rhs;
+    size_t dimension() const {
+        return m_vertices.size();
     }
+
+    std::vector<Simplex> subsimplices() const {
+        std::vector<Simplex> simplex_subsimplices;
+        simplex_subsimplices.reserve(m_vertices.size());
+        for (size_t exclude_pos = 0; exclude_pos < m_vertices.size(); ++exclude_pos) {
+            std::vector<Vertex> simplex;
+            for (size_t i = 0; i < m_vertices.size(); ++i) {
+                if (i != exclude_pos) {
+                    simplex.emplace_back(m_vertices[i]);
+                }
+            }
+            if (!simplex.empty()) {
+                simplex_subsimplices.push_back(std::move(simplex));
+            }
+        }
+        return simplex_subsimplices;
+    }
+
+    const std::vector<Vertex>& vertices() const {
+        return m_vertices;
+    }
+
+private:
+    std::vector<Vertex> m_vertices;
 };
 
+template<typename Vertex>
+using Filter = std::function<Weight(const Simplex<Vertex>&)>;
+
+template<typename Vertex>
 class WeightedSimplex {
 public:
-    using Weight = size_t;
-    using Filter = std::function<Weight(const Simplex&)>;
-
-    WeightedSimplex(const Simplex& simplex, Filter filter);
-
-    friend bool operator==(const WeightedSimplex& lhs, const WeightedSimplex& rhs) {
-        return lhs.m_weight == rhs.m_weight && lhs.m_simplex == rhs.m_simplex;
-    }
+    WeightedSimplex(const Simplex<Vertex>& simplex, Filter<Vertex> filter) :
+        m_simplex(simplex), m_weight(filter(simplex)), m_filter(filter) {};
 
     friend std::strong_ordering operator<=>(const WeightedSimplex& lhs, const WeightedSimplex& rhs) {
         if (lhs.m_weight != rhs.m_weight) {
@@ -81,16 +90,39 @@ public:
         return lhs.m_simplex <=> rhs.m_simplex;
     }
 
-    const Simplex& get_simplex() const;
-    Weight get_weight() const;
-    std::string to_string() const;
-    size_t dimension() const;
-    std::vector<WeightedSimplex> subsimplices() const;
+    const Simplex<Vertex>& get_simplex() const {
+        return m_simplex;
+    }
+
+    Weight get_weight() const {
+        return m_weight;
+    }
+
+    std::string to_string() const {
+        return m_simplex.to_string();
+    }
+
+    size_t dimension() const {
+        return m_simplex.dimension();
+    }
+
+    std::vector<WeightedSimplex> subsimplices() const {
+        const auto& simplex_subsimplices = m_simplex.subsimplices();
+        std::vector<WeightedSimplex> weighted_subsimplices;
+        weighted_subsimplices.reserve(simplex_subsimplices.size());
+
+        for (const auto& subsimplex : simplex_subsimplices) {
+            weighted_subsimplices.emplace_back(WeightedSimplex(subsimplex, m_filter));
+        }
+
+        std::sort(weighted_subsimplices.begin(), weighted_subsimplices.end());
+        return weighted_subsimplices;
+    }
 
 private:
-    Simplex m_simplex;
+    Simplex<Vertex> m_simplex;
     Weight m_weight;
-    Filter m_filter;
+    Filter<Vertex> m_filter;
 };
 
 #endif
