@@ -37,8 +37,15 @@ FetchContent_Declare(
   URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
   DOWNLOAD_EXTRACT_TIMESTAMP ON
 )
-
 FetchContent_MakeAvailable(googletest)
+
+FetchContent_Declare(
+  Boost
+  GIT_REPOSITORY https://github.com/boostorg/boost.git
+  GIT_TAG boost-1.87.0
+  DOWNLOAD_EXTRACT_TIMESTAMP ON
+)
+FetchContent_MakeAvailable(Boost)
 
 enable_testing()
 
@@ -48,6 +55,7 @@ include(tests/CMakeLists.txt)
 target_link_libraries(
   tests
   GTest::gtest_main
+  Boost::asio
 )
 
 include(GoogleTest)
