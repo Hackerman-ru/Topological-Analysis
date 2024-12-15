@@ -1,4 +1,4 @@
-#include "../src/include/generator.h"
+#include "../src/include/reducers.h"
 #include "../src/include/vertices.h"
 
 #include "gtest/gtest.h"

@@ -1,7 +1,7 @@
 #ifndef __INDEX_MATRIX_H__
 #define __INDEX_MATRIX_H__
 
-#include "simplex.h"
+#include "../core/simplex.h"
 
 #include <cstdint>
 #include <map>

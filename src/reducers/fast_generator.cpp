@@ -1,4 +1,4 @@
-#include "generator.h"
+#include "fast_generator.h"
 
 State::State(Index size) :
     m_matrix(size), m_lows(get_nothing_vector(size)), m_arglows(get_nothing_vector(size)) {};

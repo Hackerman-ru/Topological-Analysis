@@ -1,8 +1,8 @@
 #ifndef __REDUCER_H__
 #define __REDUCER_H__
 
-#include "core/index_matrix.h"
-#include "core/persistence_pairing.h"
+#include "../core/persistence_pairing.h"
+#include "index_matrix.h"
 
 #include <boost/asio/post.hpp>
 #include <boost/asio/thread_pool.hpp>
