@@ -17,12 +17,7 @@ public:
         m_matrix(weighted_simplices),
         m_lows(get_nothing_vector(weighted_simplices.size())),
         m_arglows(get_nothing_vector(weighted_simplices.size())) {
-        for (Index index = 0; index < weighted_simplices.size(); ++index) {
-            m_lows[index] = m_matrix[index].lowest_element_index();
-            if (m_lows[index] != NO_INDEX && m_arglows[m_lows[index]] == NO_INDEX) {
-                m_arglows[m_lows[index]] = index;
-            }
-        }
+        update_lows();
     }
 
     const IndexMatrix& get_matrix() const;
@@ -34,6 +29,7 @@ public:
     std::vector<Index>& get_lows();
     std::vector<Index>& get_arglows();
     void clear_lows();
+    void update_lows();
 
 private:
     static std::vector<Index> get_nothing_vector(Index size);
@@ -57,7 +53,8 @@ State reduce(State state) {
             break;
         }
         boost::asio::thread_pool pool(12);
-        //state.clear_lows();
+        state.clear_lows();
+        state.update_lows();
         const IndexMatrix& matrix = state.get_matrix();
         const std::vector<Index>& lows = state.get_lows();
         const std::vector<Index>& arglows = state.get_arglows();
@@ -69,9 +66,9 @@ State reduce(State state) {
 
         for (size_t index = 0; index < matrix.size(); ++index) {
             if (lows[index] == NO_INDEX) {
+                next_matrix[index] = matrix[index];
                 continue;
             }
-
             Index min_index = arglows[lows[index]];
             if (min_index != index) {
                 boost::asio::post(
@@ -82,14 +79,8 @@ State reduce(State state) {
         }
 
         pool.join();
-        for (Index index = 0; index < matrix.size(); ++index) {
-            next_lows[index] = next_matrix[index].lowest_element_index();
-            if (next_lows[index] != NO_INDEX && next_arglows[next_lows[index]] == NO_INDEX) {
-                next_arglows[next_lows[index]] = index;
-            }
-            auto representatives = next_matrix[index].representatives();
-        }
         state = next_state;
+        state.update_lows();
     }
 
     return state;

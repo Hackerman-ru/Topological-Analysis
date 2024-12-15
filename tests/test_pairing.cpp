@@ -53,9 +53,9 @@ TEST(Pairing, TestPoint) {
 
     auto filter = [](const Simplex& simplex) -> Weight {
         auto vertices = simplex.vertices();
-        if (simplex.dimension() <= 1) {
+        if (simplex.size() <= 1) {
             return 0;
-        } else if (simplex.dimension() == 2) {
+        } else if (simplex.size() == 2) {
             return squared_distance(vertices[0], vertices[1]);
         } else {
             Weight max_weight = 0;

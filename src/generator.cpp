@@ -42,9 +42,19 @@ std::vector<Index>& State::get_arglows() {
 void State::clear_lows() {
     for (size_t index = m_lows.size(); index > 0; --index) {
         Index low = m_lows[index - 1];
-        if (low != NO_INDEX) {
+        if (low != NO_INDEX && m_lows[low] != NO_INDEX) {
             m_lows[low] = NO_INDEX;
-            m_matrix[low].clear();
+            std::vector<Index> representatives = m_matrix.subindices(index - 1);
+            m_matrix[low].clear_and_set_representatives(std::move(representatives));
+        }
+    }
+}
+
+void State::update_lows() {
+    for (Index index = 0; index < m_matrix.size(); ++index) {
+        m_lows[index] = m_matrix[index].lowest_element_index();
+        if (m_lows[index] != NO_INDEX && m_arglows[m_lows[index]] == NO_INDEX) {
+            m_arglows[m_lows[index]] = index;
         }
     }
 }

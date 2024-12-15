@@ -5,6 +5,7 @@
 
 #include <cstdint>
 #include <map>
+#include <unordered_map>
 
 using Index = size_t;
 // using Value = bool;
@@ -33,10 +34,11 @@ public:
 
     friend IndexColumn operator+(const IndexColumn& lhs, const IndexColumn& rhs);
 
-    void clear();
+    void clear_and_set_representatives(std::vector<Index> representatives);
 
     Index index() const;
     Index lowest_element_index() const;
+    const std::vector<IndexElement>& elements() const;
     const std::vector<Index>& representatives() const;
     size_t size() const;
 
@@ -51,10 +53,12 @@ public:
     IndexMatrix(Index size);
 
     template<typename Vertex>
-    IndexMatrix(const std::vector<WeightedSimplex<Vertex>>& weighted_simplices) :
-        m_columns(extract_columns<Vertex>(weighted_simplices)) {};
+    IndexMatrix(const std::vector<WeightedSimplex<Vertex>>& weighted_simplices) {
+        m_columns = extract_columns(weighted_simplices);
+    }
 
     const std::vector<IndexColumn>& get_columns() const;
+    const std::vector<Index>& subindices(Index index) const;
 
     const IndexColumn& operator[](Index index) const;
     IndexColumn& operator[](Index index);
@@ -64,8 +68,7 @@ private:
     static std::vector<IndexColumn> generate_empty_columns(Index size);
 
     template<typename Vertex>
-    static std::vector<IndexColumn>
-        extract_columns(const std::vector<WeightedSimplex<Vertex>>& weighted_simplices) {
+    std::vector<IndexColumn> extract_columns(const std::vector<WeightedSimplex<Vertex>>& weighted_simplices) {
         std::vector<IndexColumn> columns;
         columns.reserve(weighted_simplices.size());
         std::map<WeightedSimplex<Vertex>, Index> indexer;
@@ -73,6 +76,14 @@ private:
         for (size_t index = 0; index < weighted_simplices.size(); ++index) {
             const WeightedSimplex<Vertex>& weighted_simplex = weighted_simplices[index];
             std::vector<IndexElement> elements = extract_elements<Vertex>(weighted_simplex, indexer);
+            if (weighted_simplex.size() > 1) {
+                std::vector<Index> subindices;
+                subindices.reserve(weighted_simplex.size());
+                for (const IndexElement& element : elements) {
+                    subindices.emplace_back(element.index);
+                }
+                m_subindices[index] = subindices;
+            }
             indexer[weighted_simplex] = index;
             columns.emplace_back(IndexColumn(index, std::move(elements)));
         }
@@ -95,6 +106,7 @@ private:
     }
 
     std::vector<IndexColumn> m_columns;
+    std::unordered_map<Index, std::vector<Index>> m_subindices;
 };
 
 #endif

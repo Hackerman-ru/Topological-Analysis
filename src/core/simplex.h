@@ -27,8 +27,8 @@ public:
     friend bool operator==(const Simplex& lhs, const Simplex& rhs) = default;
 
     friend std::strong_ordering operator<=>(const Simplex& lhs, const Simplex& rhs) {
-        if (lhs.dimension() != rhs.dimension()) {
-            return lhs.dimension() <=> rhs.dimension();
+        if (lhs.size() != rhs.size()) {
+            return lhs.size() <=> rhs.size();
         }
         return lhs.m_vertices <=> rhs.m_vertices;
     }
@@ -38,14 +38,14 @@ public:
         for (const auto& vertex : m_vertices) {
             result += vertex.to_string() + ",";
         }
-        if (dimension() > 0) {
+        if (size() > 0) {
             result.pop_back();
         }
         result += '}';
         return result;
     }
 
-    size_t dimension() const {
+    size_t size() const {
         return m_vertices.size();
     }
 
@@ -102,8 +102,8 @@ public:
         return m_simplex.to_string();
     }
 
-    size_t dimension() const {
-        return m_simplex.dimension();
+    size_t size() const {
+        return m_simplex.size();
     }
 
     std::vector<WeightedSimplex> subsimplices() const {

@@ -43,8 +43,9 @@ IndexColumn operator+(const IndexColumn& lhs, const IndexColumn& rhs) {
     return IndexColumn {rhs.index(), std::move(elements), std::move(representatives)};
 }
 
-void IndexColumn::clear() {
-    m_representatives = {m_index};
+void IndexColumn::clear_and_set_representatives(std::vector<Index> representatives) {
+    m_elements.clear();
+    m_representatives = std::move(representatives);
 }
 
 Index IndexColumn::index() const {
@@ -56,6 +57,10 @@ Index IndexColumn::lowest_element_index() const {
         return NO_INDEX;
     }
     return m_elements.back().index;
+}
+
+const std::vector<IndexElement>& IndexColumn::elements() const {
+    return m_elements;
 }
 
 const std::vector<Index>& IndexColumn::representatives() const {
@@ -70,6 +75,10 @@ IndexMatrix::IndexMatrix(Index size) : m_columns(generate_empty_columns(size)) {
 
 const std::vector<IndexColumn>& IndexMatrix::get_columns() const {
     return m_columns;
+}
+
+const std::vector<Index>& IndexMatrix::subindices(Index index) const {
+    return m_subindices.at(index);
 }
 
 const IndexColumn& IndexMatrix::operator[](Index index) const {
