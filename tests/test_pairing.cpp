@@ -37,6 +37,7 @@ TEST(Pairing, TestBase) {
         {3, 4},
         {2, 3, 4}
     });
+
     EXPECT_TRUE(complex.has_value());
     std::cout << "Complex:\n";
     std::cout << complex->to_string() << '\n';
@@ -55,22 +56,18 @@ TEST(Pairing, TestPoint) {
         auto vertices = simplex.vertices();
         if (simplex.size() <= 1) {
             return 0;
-        } else if (simplex.size() == 2) {
-            return squared_distance(vertices[0], vertices[1]);
-        } else {
-            Weight max_weight = 0;
-            for (size_t i = 0; i < vertices.size(); ++i) {
-                for (size_t j = i + 1; j < vertices.size(); ++j) {
-                    max_weight = std::max(max_weight, squared_distance(vertices[i], vertices[j]));
-                }
-            }
-            return max_weight;
         }
+        if (simplex.size() == 2) {
+            return squared_distance(vertices[0], vertices[1]);
+        }
+        Weight max_weight = 0;
+        for (size_t i = 0; i < vertices.size(); ++i) {
+            for (size_t j = i + 1; j < vertices.size(); ++j) {
+                max_weight = std::max(max_weight, squared_distance(vertices[i], vertices[j]));
+            }
+        }
+        return max_weight;
     };
-
-    auto s = Simplex({
-        Point {1, 1, 0}
-    });
 
     auto complex = Complex::create({
         {{{1, 1, 0}}},
@@ -81,6 +78,7 @@ TEST(Pairing, TestPoint) {
         {{{2, 1, 2}, {3, -1, -2}}},
         {{{1, 1, 0}, {2, 1, 2}, {3, -1, -2}}},
     });
+
     EXPECT_TRUE(complex.has_value());
     std::cout << "Complex:\n";
     std::cout << complex->to_string() << '\n';

@@ -1,28 +1,28 @@
 cmake_minimum_required(VERSION 3.14)
 
 project(
-    matrix_algo
+    topa
     VERSION 1.0
     LANGUAGES CXX
     DESCRIPTION "Matrix algo lib for C++"
 )
 
-add_library(matrix_algo INTERFACE)
-add_library(matrix_algo::matrix_algo ALIAS matrix_algo)
+add_library(topa INTERFACE)
+add_library(topa::topa ALIAS topa)
 
-set_target_properties(matrix_algo PROPERTIES LINKER_LANGUAGE CXX)
+set_target_properties(topa PROPERTIES LINKER_LANGUAGE CXX)
 
-set(public_headers src/include/matrix_algo.h)
+set(public_headers src/include/topa.h)
 include(CMakePackageConfigHelpers)
 
-target_include_directories(matrix_algo
+target_include_directories(topa
   INTERFACE
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
         "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
         "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
         "${CMAKE_CURRENT_SOURCE_DIR}/src")
 
-set_target_properties(matrix_algo PROPERTIES
+set_target_properties(topa PROPERTIES
     PUBLIC_HEADER "${public_headers}"
     SOVERSION ${PROJECT_VERSION_MAJOR}
     VERSION ${PROJECT_VERSION})

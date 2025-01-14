@@ -7,6 +7,7 @@
 #include <boost/asio/post.hpp>
 #include <boost/asio/thread_pool.hpp>
 #include <unordered_set>
+#include <utility>
 
 class State {
 public:
@@ -37,11 +38,6 @@ private:
     IndexMatrix m_matrix;
     std::vector<Index> m_lows;
     std::vector<Index> m_arglows;
-};
-
-struct Pair {
-    Index left;
-    Index right;
 };
 
 void add_columns(Index source, Index destination, const IndexMatrix& matrix, IndexMatrix& next_matrix);
@@ -105,7 +101,7 @@ PersistencePairing<Vertex> extract_pairing(const State& state,
     const std::vector<Index>& lows = state.get_lows();
     PersistencePairing<Vertex> persistence_pairing;
     std::unordered_set<Index> essentials_indices;
-    std::vector<Pair> pairs_indices;
+    std::vector<std::pair<Index, Index>> pairs_indices;
 
     for (size_t index = 0; index < matrix.size(); ++index) {
         if (lows[index] == NO_INDEX) {
@@ -113,22 +109,22 @@ PersistencePairing<Vertex> extract_pairing(const State& state,
             continue;
         }
         essentials_indices.erase(lows[index]);
-        pairs_indices.emplace_back(Pair {.left = lows[index], .right = index});
+        pairs_indices.emplace_back(std::make_pair(lows[index], index));
     }
 
     for (const auto& essential_index : essentials_indices) {
-        WeightedSimplex<Vertex> essential_simplex = weighted_simplices[essential_index];
+        WeightedSimplex<Vertex> essential = weighted_simplices[essential_index];
         const std::vector<Index>& representatives_indices = matrix[essential_index].representatives();
         std::vector<Simplex<Vertex>> representatives =
             extract_representatives(representatives_indices, weighted_simplices);
-        persistence_pairing.add_essential(Essential<Vertex> {.weighted_simplex = std::move(essential_simplex),
+        persistence_pairing.add_essential(Essential<Vertex> {.weighted_simplex = std::move(essential),
                                                              .representatives = std::move(representatives)});
     }
 
-    for (const auto& pair_indices : pairs_indices) {
-        WeightedSimplex<Vertex> creator = weighted_simplices[pair_indices.left];
-        WeightedSimplex<Vertex> destroyer = weighted_simplices[pair_indices.right];
-        const std::vector<Index>& representatives_indices = matrix[pair_indices.left].representatives();
+    for (const auto& [creator_index, destroyer_index] : pairs_indices) {
+        WeightedSimplex<Vertex> creator = weighted_simplices[creator_index];
+        WeightedSimplex<Vertex> destroyer = weighted_simplices[destroyer_index];
+        const std::vector<Index>& representatives_indices = matrix[creator_index].representatives();
         std::vector<Simplex<Vertex>> representatives =
             extract_representatives(representatives_indices, weighted_simplices);
         persistence_pairing.add_pair(PersistencePair<Vertex> {.creator = std::move(creator),
