@@ -37,7 +37,7 @@ option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 # add uninstall target if it has not yet been defined
 if(NOT TARGET uninstall)
     configure_file(
-        "${CMAKE_CURRENT_SOURCE_DIR}/cmake_uninstall.cmake.in"
+        "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_uninstall.cmake.in"
         "${CMAKE_CURRENT_BINARY_DIR}/cmake_uninstall.cmake"
         IMMEDIATE @ONLY
     )
@@ -55,5 +55,4 @@ add_subdirectory(src)
 add_subdirectory(tests)
 
 # add the executable
-add_executable(${PROJECT_NAME} main.cpp)
-target_link_libraries(${PROJECT_NAME} PRIVATE ${PROJECT_LIBRARY_NAME} ${PROJECT_COMPILER_FLAGS})
+add_subdirectory(main)

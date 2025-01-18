@@ -6,16 +6,18 @@ set(
     index_matrix.cpp
 )
 
+set(HEADERS_DIRECTORY ${PROJECT_SOURCE_DIR}/include/topa)
+
 set(
     Headers
-    ${PROJECT_SOURCE_DIR}/include/topa/core/complex.h
-    ${PROJECT_SOURCE_DIR}/include/topa/core/persistence_pairing.h
-    ${PROJECT_SOURCE_DIR}/include/topa/core/simplex.h
-    ${PROJECT_SOURCE_DIR}/include/topa/core/util.h
-    ${PROJECT_SOURCE_DIR}/include/topa/vertices/base.h
-    ${PROJECT_SOURCE_DIR}/include/topa/vertices/point.h
-    ${PROJECT_SOURCE_DIR}/include/topa/fast_generator.h
-    ${PROJECT_SOURCE_DIR}/include/topa/index_matrix.h
+    ${HEADERS_DIRECTORY}/core/complex.h
+    ${HEADERS_DIRECTORY}/core/persistence_pairing.h
+    ${HEADERS_DIRECTORY}/core/simplex.h
+    ${HEADERS_DIRECTORY}/core/util.h
+    ${HEADERS_DIRECTORY}/vertices/base.h
+    ${HEADERS_DIRECTORY}/vertices/point.h
+    ${HEADERS_DIRECTORY}/fast_generator.h
+    ${HEADERS_DIRECTORY}/index_matrix.h
 )
 
 # add the library and set the include headers
@@ -25,7 +27,8 @@ target_include_directories(
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/${PROJECT_NAME}>
     $<INSTALL_INTERFACE:${PROJECT_SOURCE_DIR}/include>
 )
-target_sources(${PROJECT_LIBRARY} PUBLIC
+target_sources(
+    ${PROJECT_LIBRARY} PUBLIC
     FILE_SET HEADERS
     TYPE HEADERS
     BASE_DIRS ${PROJECT_SOURCE_DIR}/include
@@ -45,12 +48,12 @@ FetchContent_MakeAvailable(boost)
 # link library to boost and compiler_flags
 target_link_libraries(
     ${PROJECT_LIBRARY}
-    PRIVATE Boost::asio
-    PUBLIC ${PROJECT_COMPILER_FLAGS}
+    PRIVATE Boost::asio ${PROJECT_COMPILER_FLAGS}
 )
 
 # install lib
-install(TARGETS ${PROJECT_LIBRARY}
+install(
+    TARGETS ${PROJECT_LIBRARY}
     DESTINATION ${CMAKE_INSTALL_LIBDIR}
     INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     EXPORT ${PROJECT_LIBRARY}Targets
