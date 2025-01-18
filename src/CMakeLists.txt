@@ -1,7 +1,6 @@
 set(
     Sources
     vertices/base.cpp
-    vertices/point.cpp
     fast_generator.cpp
     index_matrix.cpp
 )

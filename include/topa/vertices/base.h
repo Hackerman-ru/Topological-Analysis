@@ -6,16 +6,18 @@
 #include <compare>
 #include <string>
 
-struct Base {
-    Id id;
-
+class Base {
+public:
     Base(Id id);
 
     friend std::strong_ordering operator<=>(const Base& lhs, const Base& rhs) = default;
 
     Id get_id() const;
     virtual std::string to_string() const;
-    virtual ~Base();
+    virtual ~Base() = default;
+
+protected:
+    Id m_id;
 };
 
 #endif

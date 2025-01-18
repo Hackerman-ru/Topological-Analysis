@@ -1,7 +1,7 @@
-#ifndef __PAIRING_H__
-#define __PAIRING_H__
+#ifndef __PERSISTENCE_PAIRING_H__
+#define __PERSISTENCE_PAIRING_H__
 
-#include "complex.h"
+#include "simplex.h"
 
 #include <iostream>
 

@@ -1,4 +1,4 @@
-#include "core/persistence_pairing.h"
+#include "core/complex.h"
 #include "fast_generator.h"
 #include "vertices/point.h"
 
@@ -47,7 +47,7 @@ TEST(Pairing, TestBase) {
 }
 
 TEST(Pairing, TestPoint) {
-    using Vertex = Point;
+    using Vertex = Point<2>;
     using Simplex = Simplex<Vertex>;
     using Complex = Complex<Vertex>;
 
@@ -69,13 +69,13 @@ TEST(Pairing, TestPoint) {
     };
 
     auto complex = Complex::create({
-        {{{1, 1, 0}}},
-        {{{2, 1, 2}}},
-        {{{3, -1, -2}}},
-        {{{1, 1, 0}, {2, 1, 2}}},
-        {{{1, 1, 0}, {3, -1, -2}}},
-        {{{2, 1, 2}, {3, -1, -2}}},
-        {{{1, 1, 0}, {2, 1, 2}, {3, -1, -2}}},
+        {{Vertex(1, {1, 0})}},
+        {{Vertex(2, {1, 2})}},
+        {{Vertex(3, {-1, -2})}},
+        {{Vertex(1, {1, 0}), Vertex(2, {1, 2})}},
+        {{Vertex(1, {1, 0}), Vertex(3, {-1, -2})}},
+        {{Vertex(2, {1, 2}), Vertex(3, {-1, -2})}},
+        {{Vertex(1, {1, 0}), Vertex(2, {1, 2}), Vertex(3, {-1, -2})}},
     });
 
     EXPECT_TRUE(complex.has_value());
