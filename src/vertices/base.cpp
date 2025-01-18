@@ -1,4 +1,4 @@
-#include "base.h"
+#include "vertices/base.h"
 
 Base::Base(Id id) : id(id) {};
 

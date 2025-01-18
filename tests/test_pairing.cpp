@@ -1,5 +1,6 @@
-#include "../src/include/reducers.h"
-#include "../src/include/vertices.h"
+#include "core/persistence_pairing.h"
+#include "fast_generator.h"
+#include "vertices/point.h"
 
 #include "gtest/gtest.h"
 
@@ -7,7 +8,6 @@ TEST(Pairing, TestBase) {
     using Vertex = Base;
     using Simplex = Simplex<Vertex>;
     using Complex = Complex<Vertex>;
-    using PersistencePairing = PersistencePairing<Vertex>;
 
     auto filter = [](const Simplex& simplex) {
         static std::map<Simplex, Weight> mp = {
@@ -50,7 +50,6 @@ TEST(Pairing, TestPoint) {
     using Vertex = Point;
     using Simplex = Simplex<Vertex>;
     using Complex = Complex<Vertex>;
-    using PersistencePairing = PersistencePairing<Vertex>;
 
     auto filter = [](const Simplex& simplex) -> Weight {
         auto vertices = simplex.vertices();

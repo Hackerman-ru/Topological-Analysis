@@ -32,7 +32,8 @@
 *.app
 
 # VSCode files
-*.vscode
+.vscode
+.cache
 
 # Build files
 build/

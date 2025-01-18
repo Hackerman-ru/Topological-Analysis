@@ -1,7 +1,7 @@
-#ifndef __REDUCER_H__
-#define __REDUCER_H__
+#ifndef __FAST_GENERATOR_H__
+#define __FAST_GENERATOR_H__
 
-#include "../core/persistence_pairing.h"
+#include "core/persistence_pairing.h"
 #include "index_matrix.h"
 
 #include <boost/asio/post.hpp>
@@ -57,8 +57,6 @@ State reduce(State state) {
 
         State next_state(matrix.size());
         IndexMatrix& next_matrix = next_state.get_matrix();
-        std::vector<Index>& next_lows = next_state.get_lows();
-        std::vector<Index>& next_arglows = next_state.get_arglows();
 
         for (size_t index = 0; index < matrix.size(); ++index) {
             if (lows[index] == NO_INDEX) {
