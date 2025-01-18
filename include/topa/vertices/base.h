@@ -13,8 +13,9 @@ struct Base {
 
     friend std::strong_ordering operator<=>(const Base& lhs, const Base& rhs) = default;
 
-    virtual std::string to_string() const;
     Id get_id() const;
+    virtual std::string to_string() const;
+    virtual ~Base();
 };
 
 #endif
