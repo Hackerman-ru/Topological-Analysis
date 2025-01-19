@@ -16,4 +16,5 @@ include(GoogleTest)
 # discover and add Tests
 add_executable(Tests test_pairing.cpp)
 target_link_libraries(Tests ${PROJECT_LIBRARY} gtest_main ${PROJECT_COMPILER_FLAGS})
+target_compile_definitions(Tests PRIVATE DATA_DIR="${CMAKE_SOURCE_DIR}/data")
 gtest_discover_tests(Tests)

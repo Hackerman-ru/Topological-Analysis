@@ -71,7 +71,9 @@ size_t IndexColumn::size() const {
     return m_elements.size();
 }
 
-IndexMatrix::IndexMatrix(Index size) : m_columns(generate_empty_columns(size)) {};
+IndexMatrix IndexMatrix::generate_empty_copy() const {
+    return IndexMatrix(generate_empty_columns(size()), m_subindices);
+}
 
 const std::vector<IndexColumn>& IndexMatrix::get_columns() const {
     return m_columns;

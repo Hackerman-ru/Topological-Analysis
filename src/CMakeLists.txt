@@ -17,6 +17,7 @@ set(
     ${HEADERS_DIRECTORY}/vertices/point.h
     ${HEADERS_DIRECTORY}/fast_generator.h
     ${HEADERS_DIRECTORY}/index_matrix.h
+    ${HEADERS_DIRECTORY}/off_parser.h
 )
 
 # add the library and set the include headers

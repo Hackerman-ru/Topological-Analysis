@@ -1,7 +1,9 @@
 #include "fast_generator.h"
 
-State::State(Index size) :
-    m_matrix(size), m_lows(get_nothing_vector(size)), m_arglows(get_nothing_vector(size)) {};
+State::State(const IndexMatrix& matrix) :
+    m_matrix(matrix),
+    m_lows(get_nothing_vector(matrix.size())),
+    m_arglows(get_nothing_vector(matrix.size())) {};
 
 const IndexMatrix& State::get_matrix() const {
     return m_matrix;

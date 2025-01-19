@@ -3,19 +3,17 @@
 
 #include "core/simplex.h"
 
+#include <cassert>
 #include <cstdint>
 #include <map>
 #include <unordered_map>
 
 using Index = size_t;
-// using Value = bool;
 
 static constexpr Index NO_INDEX = SIZE_MAX;
 
 struct IndexElement {
     Index index;
-
-    // Value value;
 
     friend bool operator==(const IndexElement& lhs, const IndexElement& rhs) {
         return lhs.index == rhs.index;
@@ -50,12 +48,12 @@ private:
 
 class IndexMatrix {
 public:
-    IndexMatrix(Index size);
-
     template<typename Vertex>
     IndexMatrix(const std::vector<WeightedSimplex<Vertex>>& weighted_simplices) {
         m_columns = extract_columns(weighted_simplices);
     }
+
+    IndexMatrix generate_empty_copy() const;
 
     const std::vector<IndexColumn>& get_columns() const;
     const std::vector<Index>& subindices(Index index) const;
@@ -66,6 +64,9 @@ public:
 
 private:
     static std::vector<IndexColumn> generate_empty_columns(Index size);
+
+    IndexMatrix(std::vector<IndexColumn> columns, std::unordered_map<Index, std::vector<Index>> subindices) :
+        m_columns(std::move(columns)), m_subindices(std::move(subindices)) {};
 
     template<typename Vertex>
     std::vector<IndexColumn> extract_columns(const std::vector<WeightedSimplex<Vertex>>& weighted_simplices) {

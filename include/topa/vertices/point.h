@@ -5,10 +5,9 @@
 
 #include <type_traits>
 
-template<size_t dimensions>
+template<typename data_t, size_t dimensions>
 class Point : public Base {
 public:
-    using data_t = int64_t;
     using Coordinates = std::array<data_t, dimensions>;
 
     static_assert(std::is_convertible_v<data_t, Weight>, "Not weightable");

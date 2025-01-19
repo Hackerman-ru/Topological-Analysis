@@ -46,11 +46,16 @@ public:
         return Complex();
     }
 
-    void push(const Simplex<Vertex>& simplex) {
-        m_simplices.insert(simplex);
+    void push(Simplex<Vertex> simplex) {
+        if (m_simplices.contains(simplex)) {
+            return;
+        }
+
         for (const Simplex<Vertex>& subsimplex : simplex.subsimplices()) {
             push(subsimplex);
         }
+
+        m_simplices.insert(std::move(simplex));
     }
 
     std::vector<WeightedSimplex<Vertex>> weigh_simplices(Filter<Vertex> filter) const {

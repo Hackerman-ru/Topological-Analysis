@@ -11,7 +11,7 @@
 
 class State {
 public:
-    State(Index size);
+    State(const IndexMatrix& matrix);
 
     template<typename Vertex>
     State(const std::vector<WeightedSimplex<Vertex>>& weighted_simplices) :
@@ -55,7 +55,7 @@ State reduce(State state) {
         const std::vector<Index>& lows = state.get_lows();
         const std::vector<Index>& arglows = state.get_arglows();
 
-        State next_state(matrix.size());
+        State next_state(matrix);
         IndexMatrix& next_matrix = next_state.get_matrix();
 
         for (size_t index = 0; index < matrix.size(); ++index) {

@@ -53,14 +53,14 @@ public:
         std::vector<Simplex> simplex_subsimplices;
         simplex_subsimplices.reserve(m_vertices.size());
         for (size_t exclude_pos = 0; exclude_pos < m_vertices.size(); ++exclude_pos) {
-            std::vector<Vertex> simplex;
+            std::vector<Vertex> subsimplex_vertices;
             for (size_t i = 0; i < m_vertices.size(); ++i) {
                 if (i != exclude_pos) {
-                    simplex.emplace_back(m_vertices[i]);
+                    subsimplex_vertices.emplace_back(m_vertices[i]);
                 }
             }
-            if (!simplex.empty()) {
-                simplex_subsimplices.push_back(std::move(simplex));
+            if (!subsimplex_vertices.empty()) {
+                simplex_subsimplices.push_back(std::move(subsimplex_vertices));
             }
         }
         return simplex_subsimplices;
