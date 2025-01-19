@@ -114,5 +114,5 @@ TEST(Pairing, TestOFFParser) {
     EXPECT_TRUE(complex.has_value());
     auto weighted_simplices = complex->weigh_simplices(filter);
     auto persistence_pairing = generate_persistence_pairing<Vertex>(weighted_simplices);
-    persistence_pairing.show();
+    //persistence_pairing.show();
 }

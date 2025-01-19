@@ -4,6 +4,7 @@
 #include "util.h"
 
 #include <algorithm>
+#include <compare>
 #include <functional>
 #include <string>
 #include <vector>
@@ -26,7 +27,7 @@ public:
 
     friend bool operator==(const Simplex& lhs, const Simplex& rhs) = default;
 
-    friend std::strong_ordering operator<=>(const Simplex& lhs, const Simplex& rhs) {
+    friend std::partial_ordering operator<=>(const Simplex& lhs, const Simplex& rhs) {
         if (lhs.size() != rhs.size()) {
             return lhs.size() <=> rhs.size();
         }
@@ -83,7 +84,7 @@ public:
     WeightedSimplex(const Simplex<Vertex>& simplex, Filter<Vertex> filter) :
         m_simplex(simplex), m_weight(filter(simplex)), m_filter(filter) {};
 
-    friend std::strong_ordering operator<=>(const WeightedSimplex& lhs, const WeightedSimplex& rhs) {
+    friend std::partial_ordering operator<=>(const WeightedSimplex& lhs, const WeightedSimplex& rhs) {
         if (lhs.m_weight != rhs.m_weight) {
             return lhs.m_weight <=> rhs.m_weight;
         }

@@ -4,6 +4,6 @@
 #include <cstddef>
 
 using Id = std::size_t;
-using Weight = std::size_t;
+using Weight = double;
 
 #endif
