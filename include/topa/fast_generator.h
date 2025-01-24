@@ -4,8 +4,11 @@
 #include "core/persistence_pairing.h"
 #include "index_matrix.h"
 
+#include <atomic>
 #include <boost/asio/post.hpp>
 #include <boost/asio/thread_pool.hpp>
+#include <boost/atomic.hpp>
+#include <boost/memory_order.hpp>
 #include <unordered_set>
 #include <utility>
 
@@ -16,47 +19,45 @@ public:
     template<typename Vertex>
     State(const std::vector<WeightedSimplex<Vertex>>& weighted_simplices) :
         m_matrix(weighted_simplices),
-        m_lows(get_nothing_vector(weighted_simplices.size())),
-        m_arglows(get_nothing_vector(weighted_simplices.size())) {
-        update_lows();
+        m_lows(get_zero_vector(weighted_simplices.size())),
+        m_arglows(get_zero_vector(weighted_simplices.size())) {
+        update_arglows();
     }
 
     const IndexMatrix& get_matrix() const;
     const std::vector<Index>& get_lows() const;
     const std::vector<Index>& get_arglows() const;
-    bool is_reduced() const;
 
     IndexMatrix& get_matrix();
     std::vector<Index>& get_lows();
     std::vector<Index>& get_arglows();
     void clear_lows();
-    void update_lows();
+    bool update_arglows();
 
 private:
-    static std::vector<Index> get_nothing_vector(Index size);
+    static std::vector<Index> get_zero_vector(Index size);
 
     IndexMatrix m_matrix;
     std::vector<Index> m_lows;
     std::vector<Index> m_arglows;
 };
 
-void add_columns(Index source, Index destination, const IndexMatrix& matrix, IndexMatrix& next_matrix);
-
 template<typename Vertex>
 State reduce(State state) {
+    boost::asio::thread_pool pool(12);
+    state.clear_lows();
     while (true) {
-        if (state.is_reduced()) {
+        if (state.update_arglows()) {
             break;
         }
-        boost::asio::thread_pool pool(12);
-        state.clear_lows();
-        state.update_lows();
         const IndexMatrix& matrix = state.get_matrix();
         const std::vector<Index>& lows = state.get_lows();
         const std::vector<Index>& arglows = state.get_arglows();
 
         State next_state(matrix);
         IndexMatrix& next_matrix = next_state.get_matrix();
+        size_t jobs_scheduled = 0;
+        boost::atomic<size_t> jobs_finished;
 
         for (size_t index = 0; index < matrix.size(); ++index) {
             if (lows[index] == NO_INDEX) {
@@ -65,16 +66,24 @@ State reduce(State state) {
             }
             Index min_index = arglows[lows[index]];
             if (min_index != index) {
-                boost::asio::post(
-                    pool, std::bind(add_columns, min_index, index, std::cref(matrix), std::ref(next_matrix)));
+                ++jobs_scheduled;
+                boost::asio::post(pool,
+                                  [&jobs_finished,
+                                   &next_matrix,
+                                   &matrix = static_cast<const IndexMatrix&>(matrix),
+                                   index,
+                                   min_index]() {
+                                      next_matrix[index] = matrix[min_index] + matrix[index];
+                                      jobs_finished.fetch_add(1, boost::memory_order_release);
+                                  });
             } else {
                 next_matrix[index] = matrix[index];
             }
         }
 
-        pool.join();
-        state = next_state;
-        state.update_lows();
+        while (jobs_finished.load(boost::memory_order_acquire) != jobs_scheduled);
+        state = std::move(next_state);
+        state.clear_lows();
     }
 
     return state;

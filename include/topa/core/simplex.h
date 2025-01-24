@@ -13,16 +13,11 @@ template<typename Vertex>
 class Simplex {
 public:
     Simplex(std::vector<Vertex> vertices) : m_vertices(std::move(vertices)) {
-        std::sort(m_vertices.begin(), m_vertices.end());
+        find_subsimplices();
     }
 
-    template<typename T>
-    Simplex(std::initializer_list<T> vertices) {
-        m_vertices.reserve(vertices.size());
-        for (const auto& vertex : vertices) {
-            m_vertices.push_back(vertex);
-        }
-        std::sort(m_vertices.begin(), m_vertices.end());
+    Simplex(std::initializer_list<Vertex> vertices) : m_vertices(std::move(vertices)) {
+        find_subsimplices();
     }
 
     friend bool operator==(const Simplex& lhs, const Simplex& rhs) = default;
@@ -50,21 +45,8 @@ public:
         return m_vertices.size();
     }
 
-    std::vector<Simplex> subsimplices() const {
-        std::vector<Simplex> simplex_subsimplices;
-        simplex_subsimplices.reserve(m_vertices.size());
-        for (size_t exclude_pos = 0; exclude_pos < m_vertices.size(); ++exclude_pos) {
-            std::vector<Vertex> subsimplex_vertices;
-            for (size_t i = 0; i < m_vertices.size(); ++i) {
-                if (i != exclude_pos) {
-                    subsimplex_vertices.emplace_back(m_vertices[i]);
-                }
-            }
-            if (!subsimplex_vertices.empty()) {
-                simplex_subsimplices.push_back(std::move(subsimplex_vertices));
-            }
-        }
-        return simplex_subsimplices;
+    const std::vector<Simplex>& subsimplices() const {
+        return m_subsimplices;
     }
 
     const std::vector<Vertex>& vertices() const {
@@ -72,8 +54,41 @@ public:
     }
 
 private:
+    void find_subsimplices() {
+        if (m_vertices.size() <= 1) {
+            return;
+        }
+
+        m_subsimplices.reserve(m_vertices.size());
+        for (size_t exclude_pos = 0; exclude_pos < m_vertices.size(); ++exclude_pos) {
+            std::vector<Vertex> subsimplex_vertices;
+            subsimplex_vertices.reserve(m_vertices.size() - 1);
+            for (size_t i = 0; i < m_vertices.size(); ++i) {
+                if (i != exclude_pos) {
+                    subsimplex_vertices.emplace_back(m_vertices[i]);
+                }
+            }
+            m_subsimplices.push_back(std::move(subsimplex_vertices));
+        }
+    }
+
     std::vector<Vertex> m_vertices;
+    std::vector<Simplex> m_subsimplices;
 };
+
+namespace std {
+    template<typename Vertex>
+    struct hash<Simplex<Vertex>> {
+        auto operator()(const Simplex<Vertex>& simplex) const -> std::size_t {
+            auto vertices = simplex.vertices();
+            std::string ids;
+            for (const auto& vertex : vertices) {
+                ids += std::to_string(vertex.get_id());
+            }
+            return hash<std::string> {}(ids);
+        }
+    };
+}   // namespace std
 
 template<typename Vertex>
 using Filter = std::function<Weight(const Simplex<Vertex>&)>;
