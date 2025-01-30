@@ -38,3 +38,7 @@
 
 # Build files
 build/
+
+# Tools
+perforator
+
