@@ -37,3 +37,7 @@
 
 # Build files
 build/
+
+# Tex files
+docs/*
+
