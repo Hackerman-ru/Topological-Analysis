@@ -1,32 +1,27 @@
-set(
-    Sources
-    vertices/base.cpp
-    fast_generator.cpp
-    index_matrix.cpp
-)
-
-set(HEADERS_DIRECTORY ${PROJECT_SOURCE_DIR}/include/topa)
+set(HEADERS_DIRECTORY ${PROJECT_SOURCE_DIR}/include/${PROJECT_NAME})
 
 set(
     Headers
-    ${HEADERS_DIRECTORY}/core/complex.h
-    ${HEADERS_DIRECTORY}/core/persistence_pairing.h
-    ${HEADERS_DIRECTORY}/core/simplex.h
-    ${HEADERS_DIRECTORY}/core/util.h
-    ${HEADERS_DIRECTORY}/vertices/base.h
-    ${HEADERS_DIRECTORY}/vertices/point.h
-    ${HEADERS_DIRECTORY}/fast_generator.h
-    ${HEADERS_DIRECTORY}/index_matrix.h
-    ${HEADERS_DIRECTORY}/off_parser.h
+    ${HEADERS_DIRECTORY}/bit_tree_index_column.hpp
+    ${HEADERS_DIRECTORY}/complex.hpp
+    ${HEADERS_DIRECTORY}/filtration.hpp
+    ${HEADERS_DIRECTORY}/off_reader.hpp
+    ${HEADERS_DIRECTORY}/persistence_pairing.hpp
+    ${HEADERS_DIRECTORY}/simplex.hpp
+    ${HEADERS_DIRECTORY}/twist_reducer.hpp
+    ${HEADERS_DIRECTORY}/vertex.hpp
+    ${HEADERS_DIRECTORY}/vietoris_rips.hpp
+    ${HEADERS_DIRECTORY}/topa.hpp
 )
 
 # add the library and set the include headers
-add_library(${PROJECT_LIBRARY} STATIC ${Sources})
+add_library(${PROJECT_LIBRARY} INTERFACE ${Headers})
 target_include_directories(
-    ${PROJECT_LIBRARY} PUBLIC
+    ${PROJECT_LIBRARY} INTERFACE
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/${PROJECT_NAME}>
     $<INSTALL_INTERFACE:${PROJECT_SOURCE_DIR}/include>
 )
+
 target_sources(
     ${PROJECT_LIBRARY} PUBLIC
     FILE_SET HEADERS
@@ -35,21 +30,8 @@ target_sources(
     FILES "${Headers}"
 )
 
-# Fetch and make available boost
-FetchContent_Declare(
-  boost
-  GIT_REPOSITORY https://github.com/boostorg/boost.git
-  GIT_PROGRESS TRUE
-  GIT_TAG boost-1.87.0
-  DOWNLOAD_EXTRACT_TIMESTAMP ON
-)
-FetchContent_MakeAvailable(boost)
-
 # link library to boost and compiler_flags
-target_link_libraries(
-    ${PROJECT_LIBRARY}
-    PRIVATE Boost::asio ${PROJECT_COMPILER_FLAGS}
-)
+target_link_libraries(${PROJECT_LIBRARY} INTERFACE ${PROJECT_COMPILER_FLAGS})
 
 # install lib
 install(

@@ -1,149 +1,62 @@
-// #include "core/complex.h"
-// #include "fast_generator.h"
-#include "off_parser.h"
-#include "vertices/point.h"
+#include "topa/topa.hpp"
 
 #include "gtest/gtest.h"
 
-// TEST(Pairing, TestBase) {
-//     using Vertex = Base;
-//     using Simplex = Simplex<Vertex>;
-//     using Complex = Complex<Vertex>;
+TEST(Pairing, DoubleTwist) {
+    using weight_t = float;
+    static constexpr size_t dimensions = 3;
+    using Vertex = topa::LightVertex<topa::Point<weight_t, dimensions>>;
+    using Simplex = topa::Simplex<Vertex>;
+    using Complex = topa::Complex<Vertex>;
+    using index_t = size_t;
+    using Column = std::vector<index_t>;
+    using Matrix = std::vector<Column>;
+    using Filtration = topa::Filtration<Vertex, weight_t>;
+    using FastColumn = topa::BitTreeIndexColumn<index_t>;
+    using Reducer = topa::DoubleTwistReducer<Matrix, FastColumn, Filtration>;
+    using PersistentPairing = topa::PersistencePairing<Vertex>;
 
-//     auto filter = [](const Simplex& simplex) {
-//         static std::map<Simplex, Weight> mp = {
-//             {      Simplex {1}, 10},
-//             {      Simplex {2}, 40},
-//             {      Simplex {3}, 30},
-//             {      Simplex {4}, 20},
-//             {   Simplex {1, 2}, 80},
-//             {   Simplex {1, 4}, 20},
-//             {   Simplex {2, 3}, 60},
-//             {   Simplex {2, 4}, 50},
-//             {   Simplex {3, 4}, 50},
-//             {Simplex {2, 3, 4}, 70},
-//         };
-//         return mp[simplex];
-//     };
-
-//     Complex complex({
-//         {1},
-//         {2},
-//         {3},
-//         {4},
-//         {1, 2},
-//         {1, 4},
-//         {2, 3},
-//         {2, 4},
-//         {3, 4},
-//         {2, 3, 4}
-//     });
-
-//     std::cout << "Complex:\n";
-//     std::cout << complex.to_string() << '\n';
-//     auto weighted_simplices = complex.weigh_simplices(filter);
-//     auto persistence_pairing = generate_persistence_pairing<Vertex>(weighted_simplices);
-//     persistence_pairing.show();
-// }
-
-// TEST(Pairing, TestPoint) {
-//     using Vertex = Point<int64_t, 2>;
-//     using Simplex = Simplex<Vertex>;
-//     using Complex = Complex<Vertex>;
-
-//     auto filter = [](const Simplex& simplex) -> Weight {
-//         auto vertices = simplex.vertices();
-//         if (simplex.size() <= 1) {
-//             return 0;
-//         }
-//         if (simplex.size() == 2) {
-//             return squared_distance(vertices[0], vertices[1]);
-//         }
-//         Weight max_weight = 0;
-//         for (size_t i = 0; i < vertices.size(); ++i) {
-//             for (size_t j = i + 1; j < vertices.size(); ++j) {
-//                 max_weight = std::max(max_weight, squared_distance(vertices[i], vertices[j]));
-//             }
-//         }
-//         return max_weight;
-//     };
-
-//     Complex complex({
-//         {{Vertex(1, {1, 0})}},
-//         {{Vertex(2, {1, 2})}},
-//         {{Vertex(3, {-1, -2})}},
-//         {{Vertex(1, {1, 0}), Vertex(2, {1, 2})}},
-//         {{Vertex(1, {1, 0}), Vertex(3, {-1, -2})}},
-//         {{Vertex(2, {1, 2}), Vertex(3, {-1, -2})}},
-//         {{Vertex(1, {1, 0}), Vertex(2, {1, 2}), Vertex(3, {-1, -2})}},
-//     });
-
-//     std::cout << "Complex:\n";
-//     std::cout << complex.to_string() << '\n';
-//     auto weighted_simplices = complex.weigh_simplices(filter);
-//     auto persistence_pairing = generate_persistence_pairing<Vertex>(weighted_simplices);
-//     persistence_pairing.show();
-// }
-
-// TEST(Pairing, TestOFFParser) {
-//     using data_t = double;
-//     constexpr size_t dimensions = 3;
-//     using Vertex = Point<data_t, dimensions>;
-//     using Simplex = Simplex<Vertex>;
-
-//     auto filter = [](const Simplex& simplex) -> Weight {
-//         auto vertices = simplex.vertices();
-//         if (simplex.size() <= 1) {
-//             return 0;
-//         }
-//         if (simplex.size() == 2) {
-//             return squared_distance(vertices[0], vertices[1]);
-//         }
-//         Weight max_weight = 0;
-//         for (size_t i = 0; i < vertices.size(); ++i) {
-//             for (size_t j = i + 1; j < vertices.size(); ++j) {
-//                 max_weight = std::max(max_weight, squared_distance(vertices[i], vertices[j]));
-//             }
-//         }
-//         return max_weight;
-//     };
-
-//     auto complex = parse_off_file<data_t, dimensions>(DATA_DIR "/ModelNet40/guitar.off");
-//     EXPECT_TRUE(complex.has_value());
-//     auto weighted_simplices = complex->weigh_simplices(filter);
-//     auto persistence_pairing = generate_persistence_pairing<Vertex>(weighted_simplices);
-// }
-
-TEST(Pairing, TestVietorisRipsFiltration) {
-    using data_t = double;
-    constexpr size_t dimensions = 3;
-    // using Vertex = Point<data_t, dimensions>;
-    // using Simplex = Simplex<Vertex>;
-
-    // auto filter = [](const Simplex& simplex) -> Weight {
-    //     auto vertices = simplex.vertices();
-    //     if (simplex.size() <= 1) {
-    //         return 0;
-    //     }
-    //     if (simplex.size() == 2) {
-    //         return squared_distance(vertices[0], vertices[1]);
-    //     }
-    //     Weight max_weight = 0;
-    //     for (size_t i = 0; i < vertices.size(); ++i) {
-    //         for (size_t j = i + 1; j < vertices.size(); ++j) {
-    //             max_weight = std::max(max_weight, squared_distance(vertices[i], vertices[j]));
-    //         }
-    //     }
-    //     return max_weight;
-    // };
-
-    auto complex = parse_off_file<data_t, dimensions>(DATA_DIR "/pointclouds/klein.off", true);
-    EXPECT_TRUE(complex.has_value());
-    // auto weighted_simplices = complex->weigh_simplices(filter);
-    // std::cout << "Begin to reduce the matrix..." << std::endl;
-    // auto start = std::chrono::high_resolution_clock::now();
-    // auto persistence_pairing = generate_persistence_pairing<Vertex>(weighted_simplices);
-    // auto stop = std::chrono::high_resolution_clock::now();
-    // auto duration = duration_cast<std::chrono::microseconds>(stop - start);
-    // std::cout << "Time taken by reducer: " << duration.count() << " microseconds" << std::endl;
+    std::cout << "Reading OFF file...\n";
+    auto vertices = topa::read_pointcloud<Vertex, weight_t, dimensions>(DATA_DIR "/pointclouds/dragon.off");
+    EXPECT_TRUE(vertices.has_value());
+    auto distance = [](const Vertex& lhs, const Vertex& rhs) {
+        weight_t result = 0;
+        for (size_t i = 0; i < dimensions; ++i) {
+            weight_t temp = (*lhs).at(i) - (*rhs).at(i);
+            result += temp * temp;
+        }
+        return result;
+    };
+    std::cout << "Generating Vietoris-Rips complex...\n";
+    Complex complex =
+        topa::generate_vietoris_rips_complex<Vertex, weight_t>(vertices.value(), distance, 3, 0.006);
+    complex.show_stats();
+    //EXPECT_TRUE(complex.is_valid());
+    auto filter = [&](const Simplex& simplex) {
+        weight_t result = 0;
+        if (simplex.size() <= 1) {
+            return result;
+        }
+        auto simplex_vertices = simplex.vertices();
+        for (auto it = simplex_vertices.begin(); it != simplex_vertices.end(); ++it) {
+            auto jt = it;
+            ++jt;
+            for (; jt != simplex_vertices.end(); ++jt) {
+                result = std::max(result, distance(*it, *jt));
+            }
+        }
+        return result;
+    };
+    std::cout << "Building filtration...\n";
+    Filtration filtration(std::move(complex), filter);
+    std::cout << "Computing persistence pairing...\n";
+    auto start = std::chrono::high_resolution_clock::now();
+    PersistentPairing persistence_pairing =
+        topa::compute_persistence_pairing<Vertex, Matrix, Reducer, Filtration, index_t>(
+            std::move(filtration));
+    auto stop = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(stop - start);
+    std::cout << "\e[1mTime taken by reduction: " << static_cast<double>(duration.count()) / 1000
+              << " seconds\e[0m" << std::endl;
+    //persistence_pairing.show();
 }
