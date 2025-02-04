@@ -3,18 +3,40 @@
 %%  Объявление новых команд
 %%
 
-% \newcommand{\имя-команды}{определение команды}
-% Если длинным сложным командам LaTeX надо присвоить имя, это делается с помощью \newcommand. Ниже определяется след оператора
+% Special
+\newcommand{\q}{\hspace{0.2cm}}
+\renewcommand{\l}{\left}
+\renewcommand{\r}{\right}
+
+% Sets
+\newcommand{\F}{\mathbb{F}}
 \newcommand{\N}{\mathbb{N}}
 \newcommand{\Z}{\mathbb{Z}}
-\newcommand{\Q}{\mathbb{Q}}
-\newcommand{\E}{\mathbb{E}}
-\newcommand{\F}{\mathbb{F}}
 \newcommand{\R}{\mathbb{R}}
-\newcommand{\q}{\vspace{0.2cm}}
-\newcommand{\tr}{\operatorname{tr}}
-% Если команду надо переопределить используется \renewcommand. В этом есть необходимость, например, для определения мнимой части комплексного числа. Исходная LaTeX команда выдает не общепринятое обозначение
-\renewcommand{\Im}{\operatorname{Im}}
-\renewcommand{\Re}{\operatorname{Re}}
+\newcommand{\I}{\mathbb{I}}
+\newcommand{\Q}{\mathbb{Q}}
 \renewcommand{\C}{\mathbb{C}}
+
+% Probability theory
+\newcommand{\ord} {\operatorname{ord}}
+\newcommand{\tpn}{\overset{\text{п.н.}}{\to}}
+\newcommand{\td}{\overset{\d}{\to}}
+\newcommand{\tp}{\overset{\mathop{\rm P}}{\to}}
+\newcommand{\tl}{\overset{\mathop{\rm L}_2}{\to}}
+\newcommand{\cov}{\operatorname{cov}}
+\newcommand{\var}{\operatorname{Var}}
+\newcommand{\E}{\operatorname{\mathbb{E}}}
+\renewcommand{\P}{\operatorname{\mathbb{P}}}
+
+% Linear algebra
+\newcommand{\rk}{\operatorname{rk}}
+\newcommand{\tr}{\operatorname{tr}}
+\newcommand{\sgn}{\operatorname{sgn}}
+\newcommand{\spec}[1]{\operatorname{spec}\limits_{#1}}
+
+% Alphabet
+\newcommand{\e}{\varepsilon}
+\newcommand{\al}{\alpha}
+\newcommand{\be}{\beta}
+\newcommand{\la}{\lambda}
 
