@@ -11,6 +11,13 @@ class Complex {
    public:
     static Complex From(const Pointcloud& cloud, const Filtration& filtration);
 
+    const std::vector<WSimplex>& Simplices() const {
+        return wsimplices_;
+    }
+    const SimplexTree& Tree() const {
+        return tree_;
+    }
+
    private:
     Complex(std::vector<WSimplex> wsimplices, SimplexTree tree)
         : wsimplices_(std::move(wsimplices)),

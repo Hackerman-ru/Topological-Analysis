@@ -11,9 +11,6 @@
 namespace topa {
 
 class Filtration {
-   public:
-    using WSimplices = basic_types::DefaultContainer<WSimplex>;
-
    private:
     class Builder {
        public:
@@ -32,10 +29,19 @@ class Filtration {
         size_t max_dim_;
     };
 
+    class FullVietorisRipsBuilder : public Builder {
+       public:
+        FullVietorisRipsBuilder() = default;
+
+        WSimplices Build(const Pointcloud& cloud) const override;
+    };
+
    public:
     static Filtration VietorisRips(
         Weight max_radius = std::numeric_limits<Weight>::max(),
         size_t max_dim = std::numeric_limits<size_t>::max());
+
+    static Filtration FullVietorisRips();
 
     WSimplices Build(const Pointcloud& cloud) const;
 

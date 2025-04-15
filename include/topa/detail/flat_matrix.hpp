@@ -18,6 +18,11 @@ class FlatMatrix {
         : row_size_(row_size) {
     }
 
+    explicit FlatMatrix(size_t row_size, size_t rows)
+        : row_size_(row_size),
+          data_(std::vector<T>(row_size * rows)) {
+    }
+
     void push_back(const std::vector<T>& row) {  // NOLINT
         assert(row.size() == row_size_ &&
                "The row size must match the row_size of the FlatMatrix");
@@ -87,6 +92,9 @@ class FlatMatrix {
     }
 
     size_t size() const {  // NOLINT
+        if (row_size_ == 0) {
+            return 0;
+        }
         return data_.size() / row_size_;
     }
 

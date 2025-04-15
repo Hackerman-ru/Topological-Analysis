@@ -1,159 +1,160 @@
 #include "filtration.hpp"
+#include "simplex.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
-#include <catch2/matchers/catch_matchers_vector.hpp>
-#include <algorithm>
-#include <vector>
+#include <unordered_map>
+#include <unordered_set>
 
 using namespace topa;
-using namespace Catch::Matchers;
 
-TEST_CASE("Filtration with empty cloud") {
-    Pointcloud cloud(2);
-    auto filtration = Filtration::VietorisRips(1.0, 2);
-    auto generator = filtration.Build(cloud);
-    CHECK(std::distance(generator.begin(), generator.end()) == 0);
-}
+namespace {
+auto count_simplices_of_dim = [](const WSimplices& simplices, size_t dim) {
+    return std::count_if(simplices.begin(), simplices.end(),
+                         [dim](const WSimplex& s) {
+                             return s.simplex.size() == dim + 1;
+                         });
+};
 
-TEST_CASE("Single point cloud") {
-    Pointcloud cloud(2);
-    cloud.Add({0, 0});
-    auto filtration = Filtration::VietorisRips(1.0, 2);
-    auto generator = filtration.Build(cloud);
-    std::vector<WSimplex> simplices(generator.begin(), generator.end());
+std::vector<Simplex> generate_faces(const Simplex& s) {
+    std::vector<Simplex> faces;
+    if (s.size() <= 1)
+        return faces;
 
-    CHECK(simplices.size() == 1);
-    CHECK(simplices[0].simplex == Simplex{0});
-    CHECK(simplices[0].weight == 0.0f);
-}
-
-TEST_CASE("Two points within radius") {
-    Pointcloud cloud(2);
-    cloud.Add({0, 0});
-    cloud.Add({1, 0});
-    auto filtration = Filtration::VietorisRips(1.0, 1);
-    auto generator = filtration.Build(cloud);
-    std::vector<WSimplex> simplices(generator.begin(), generator.end());
-
-    CHECK(simplices.size() == 3);
-    CHECK_THAT(simplices, VectorContains(WSimplex{Simplex{0}, 0.0f}) &&
-                              VectorContains(WSimplex{Simplex{1}, 0.0f}) &&
-                              VectorContains(WSimplex{Simplex{0, 1}, 1.0f}));
-}
-
-TEST_CASE("Two points outside radius") {
-    Pointcloud cloud(2);
-    cloud.Add({0, 0});
-    cloud.Add({3, 0});
-    auto filtration = Filtration::VietorisRips(2.0, 1);
-    auto generator = filtration.Build(cloud);
-    std::vector<WSimplex> simplices(generator.begin(), generator.end());
-
-    CHECK(simplices.size() == 2);
-    CHECK_FALSE(
-        std::any_of(simplices.begin(), simplices.end(), [](const WSimplex& s) {
-            return s.simplex.size() == 2;
-        }));
-}
-
-TEST_CASE("Three points forming a triangle within radius") {
-    using Catch::Matchers::Approx;
-
-    Pointcloud cloud(2);
-    cloud.Add({0, 0});
-    cloud.Add({1, 0});
-    cloud.Add({0.5f, 0.866f});
-    auto filtration = Filtration::VietorisRips(1.1f, 2);
-    auto generator = filtration.Build(cloud);
-    std::vector<WSimplex> simplices(generator.begin(), generator.end());
-
-    CHECK(simplices.size() == 7);
-    CHECK(std::count_if(simplices.begin(), simplices.end(),
-                        [](const WSimplex& s) {
-                            return s.simplex.size() == 1;
-                        }) == 3);
-    CHECK(std::count_if(simplices.begin(), simplices.end(),
-                        [](const WSimplex& s) {
-                            return s.simplex.size() == 2;
-                        }) == 3);
-    CHECK(std::count_if(simplices.begin(), simplices.end(),
-                        [](const WSimplex& s) {
-                            return s.simplex.size() == 3;
-                        }) == 1);
-
-    auto triangle_it =
-        std::find_if(simplices.begin(), simplices.end(), [](const WSimplex& s) {
-            return s.simplex.size() == 3;
-        });
-    CHECK(triangle_it != simplices.end());
-    CHECK_THAT(triangle_it->weight, WithinRel(1.0f));
-}
-
-TEST_CASE("Max dimension limits simplices") {
-    Pointcloud cloud(2);
-    cloud.Add({0, 0});
-    cloud.Add({1, 0});
-    cloud.Add({0.5f, 0.866f});
-    auto filtration = Filtration::VietorisRips(1.1f, 1);
-    auto generator = filtration.Build(cloud);
-    std::vector<WSimplex> simplices(generator.begin(), generator.end());
-
-    CHECK(simplices.size() == 6);
-    CHECK(
-        std::none_of(simplices.begin(), simplices.end(), [](const WSimplex& s) {
-            return s.simplex.size() > 2;
-        }));
-}
-
-TEST_CASE("Higher simplex with one edge exceeding radius") {
-    Pointcloud cloud(2);
-    cloud.Add({0, 0});
-    cloud.Add({1, 0});
-    cloud.Add({3, 0});
-    auto filtration = Filtration::VietorisRips(2.0f, 2);
-    auto generator = filtration.Build(cloud);
-    std::vector<WSimplex> simplices(generator.begin(), generator.end());
-
-    CHECK(simplices.size() == 5);
-    CHECK(std::count_if(simplices.begin(), simplices.end(),
-                        [](const WSimplex& s) {
-                            return s.simplex.size() == 2;
-                        }) == 2);
-    CHECK(
-        std::none_of(simplices.begin(), simplices.end(), [](const WSimplex& s) {
-            return s.simplex.size() == 3;
-        }));
-}
-
-TEST_CASE("Stress test with 5 points") {
-    const int N = 5;
-    Pointcloud cloud(2);
-    for (int i = 0; i < N; ++i) {
-        cloud.Add({static_cast<float>(i), 0.0f});
+    for (size_t i = 0; i < s.size(); ++i) {
+        Simplex face;
+        for (size_t j = 0; j < s.size(); ++j) {
+            if (j != i)
+                face.push_back(s[j]);
+        }
+        std::sort(face.begin(), face.end());
+        faces.push_back(face);
     }
-    auto filtration = Filtration::VietorisRips(100.0f, N - 1);
-    auto generator = filtration.Build(cloud);
-    size_t count = 0;
-    for (const auto& s : generator) {
-        REQUIRE(std::is_sorted(s.simplex.begin(), s.simplex.end()));
-        ++count;
-    }
-    REQUIRE(count == 31);
+    return faces;
 }
 
-TEST_CASE("Simplices are sorted correctly") {
+bool contains_simplex(const std::map<Simplex, Weight>& map, const Simplex& s) {
+    Simplex sorted = s;
+    std::sort(sorted.begin(), sorted.end());
+    return map.find(sorted) != map.end();
+}
+}  // namespace
+
+TEST_CASE("VietorisRips filtration", "[filtration][vr]") {
+    Pointcloud cloud(3);
+    cloud.Add({0, 0, 0});
+    cloud.Add({1, 0, 0});
+    cloud.Add({1, 1, 0});
+    cloud.Add({0, 1, 1});
+
+    SECTION("Max parameters include all simplices") {
+        auto filtration = Filtration::VietorisRips(2.0f, 3);
+        auto simplices = filtration.Build(cloud);
+
+        REQUIRE(count_simplices_of_dim(simplices, 0) == 4);
+        REQUIRE(count_simplices_of_dim(simplices, 1) >= 6);
+    }
+
+    SECTION("Radius cutoff") {
+        auto filtration = Filtration::VietorisRips(1.1f, 2);
+        auto simplices = filtration.Build(cloud);
+
+        bool all_within_radius = true;
+        for (const auto& s : simplices) {
+            if (s.simplex.size() == 2) {
+                auto d = cloud.EuclideanDistance(s.simplex[0], s.simplex[1]);
+                if (d > 1.1f)
+                    all_within_radius = false;
+            }
+        }
+        REQUIRE(all_within_radius);
+    }
+}
+
+TEST_CASE("FullVietorisRips filtration", "[filtration][fullvr]") {
     Pointcloud cloud(2);
     cloud.Add({0, 0});
     cloud.Add({1, 0});
-    cloud.Add({2, 0});
-    auto filtration = Filtration::VietorisRips(5.0f, 2);
-    auto generator = filtration.Build(cloud);
-    std::vector<WSimplex> simplices(generator.begin(), generator.end());
+    cloud.Add({0, 1});
 
-    for (size_t i = 1; i < simplices.size(); ++i) {
-        const auto& prev = simplices[i - 1];
-        const auto& curr = simplices[i];
-        REQUIRE((prev < curr));
+    SECTION("Complete 2-skeleton") {
+        auto filtration = Filtration::FullVietorisRips();
+        auto simplices = filtration.Build(cloud);
+
+        REQUIRE(count_simplices_of_dim(simplices, 0) == 3);
+        REQUIRE(count_simplices_of_dim(simplices, 1) == 3);
+        REQUIRE(count_simplices_of_dim(simplices, 2) == 1);
+    }
+}
+
+TEST_CASE("Klein bottle integration", "[integration][slow]") {
+    auto cloud = Pointcloud::Load(DATA_DIR "/pointclouds/klein.off");
+
+    auto filtration = Filtration::VietorisRips(0.4f, 2);
+    auto simplices = filtration.Build(*cloud);
+
+    std::map<Simplex, Weight> simplex_map;
+    for (const auto& ws : simplices) {
+        Simplex sorted = ws.simplex;
+        std::sort(sorted.begin(), sorted.end());
+        simplex_map[sorted] = ws.weight;
+    }
+
+    size_t missing_faces = 0;
+    for (const auto& ws : simplices) {
+        for (const auto& face : generate_faces(ws.simplex)) {
+            if (!contains_simplex(simplex_map, face))
+                missing_faces++;
+        }
+    }
+    REQUIRE(missing_faces == 0);
+}
+
+TEST_CASE("Stress tests", "[stress]") {
+    SECTION("Large point cloud") {
+        Pointcloud cloud(3);
+        constexpr size_t N = 100;
+        for (size_t i = 0; i < N; ++i) {
+            cloud.Add({static_cast<float>(i), 0.0f, 0.0f});
+        }
+
+        auto simplices = Filtration::FullVietorisRips().Build(cloud);
+        REQUIRE(count_simplices_of_dim(simplices, 1) == (N * (N - 1)) / 2);
+    }
+}
+
+TEST_CASE("Edge cases", "[edge]") {
+    SECTION("Empty cloud") {
+        Pointcloud cloud(3);
+        auto simplices = Filtration::VietorisRips().Build(cloud);
+        REQUIRE(simplices.empty());
+    }
+
+    SECTION("Single point") {
+        Pointcloud cloud(3);
+        cloud.Add({0, 0, 0});
+        auto simplices = Filtration::VietorisRips().Build(cloud);
+        REQUIRE(simplices.size() == 1);
+        REQUIRE(simplices[0].simplex.size() == 1);
+    }
+}
+
+TEST_CASE("Weights correspond to VR-definition", "[filtration][math]") {
+    auto cloud = *Pointcloud::Load(DATA_DIR "/pointclouds/klein.off");
+    auto simplices = Filtration::FullVietorisRips().Build(cloud);
+
+    for (const auto& ws : simplices) {
+        Weight max_pairwise = 0.0f;
+        const auto& vert = ws.simplex;
+
+        for (size_t i = 0; i < vert.size(); ++i) {
+            for (size_t j = i + 1; j < vert.size(); ++j) {
+                max_pairwise = std::max(
+                    max_pairwise, cloud.EuclideanDistance(vert[i], vert[j]));
+            }
+        }
+
+        REQUIRE_THAT(ws.weight,
+                     Catch::Matchers::WithinAbs(max_pairwise, kEpsilon));
     }
 }

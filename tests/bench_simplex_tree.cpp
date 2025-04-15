@@ -23,7 +23,6 @@ static void BM_HasSimplex(benchmark::State& state) {
     const int N = 100000;
     SimplexTree st(N);
 
-    // Подготовка данных
     std::vector<SimplexTree::SortedSimplex> simplices;
     for (int i = 0; i < N; ++i) {
         simplices.push_back({i, i + 1, i + 2});

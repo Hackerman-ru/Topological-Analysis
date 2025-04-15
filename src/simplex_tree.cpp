@@ -16,16 +16,25 @@ SimplexTree::~SimplexTree() {
     }
 }
 
-bool SimplexTree::Has(SortedInitializerList simplex) const {
-    assert(std::is_sorted(simplex.begin(), simplex.end()));
-    Simplex temp(std::move(simplex));
-    return Has(std::span{temp});
+SimplexTree::SimplexTree(SimplexTree&& other) noexcept
+    : root_(std::move(other.root_)),
+      lists_heads_(std::move(other.lists_heads_)) {
+    other.root_.clear();
 }
 
-bool SimplexTree::Has(SortedSimplexView simplex) const {
-    assert(std::is_sorted(simplex.begin(), simplex.end()));
-    Node* node = TraverseDownwards(std::move(simplex));
-    return IsValid(node);
+SimplexTree& SimplexTree::operator=(SimplexTree&& other) noexcept {
+    if (this != &other) {
+        for (auto& node : root_) {
+            DeleteSubtree(node);
+        }
+
+        root_ = std::move(other.root_);
+        lists_heads_ = std::move(other.lists_heads_);
+
+        other.root_.clear();
+        other.lists_heads_.clear();
+    }
+    return *this;
 }
 
 void SimplexTree::Add(SortedInitializerList simplex, size_t pos) {
@@ -59,6 +68,18 @@ void SimplexTree::Add(SortedSimplexView simplex, size_t pos) {
     if (current_node != nullptr) {
         current_node->pos = pos;
     }
+}
+
+bool SimplexTree::Has(SortedInitializerList simplex) const {
+    assert(std::is_sorted(simplex.begin(), simplex.end()));
+    Simplex temp(std::move(simplex));
+    return Has(std::span{temp});
+}
+
+bool SimplexTree::Has(SortedSimplexView simplex) const {
+    assert(std::is_sorted(simplex.begin(), simplex.end()));
+    Node* node = TraverseDownwards(std::move(simplex));
+    return IsValid(node);
 }
 
 bool SimplexTree::IsValid(Node* node) {
@@ -116,14 +137,14 @@ SimplexTree::Node* SimplexTree::TraverseDownwards(SortedSimplexView simplex,
     return current_node;
 }
 
-SimplexTree::CFaces SimplexTree::GetFacetsOf(
+SimplexTree::CFaces SimplexTree::GetFacets(
     SortedInitializerList simplex) const {
     assert(std::is_sorted(simplex.begin(), simplex.end()));
     Simplex temp(std::move(simplex));
-    return GetFacetsOf(std::span{temp});
+    return GetFacets(std::span{temp});
 }
 
-SimplexTree::CFaces SimplexTree::GetFacetsOf(SortedSimplexView simplex) const {
+SimplexTree::CFaces SimplexTree::GetFacets(SortedSimplexView simplex) const {
     assert(std::is_sorted(simplex.begin(), simplex.end()));
     CFaces result;
     const size_t k = simplex.size();
@@ -152,7 +173,7 @@ SimplexTree::CFaces SimplexTree::GetFacetsOf(SortedSimplexView simplex) const {
         facet_simplex.reserve(k - 1);
         for (size_t i = 0; i < k; ++i) {
             if (i != excluded - 1) {
-                facet_simplex.push_back(i);
+                facet_simplex.push_back(simplex[i]);
             }
         }
         result.push_back(std::move(facet_simplex));
@@ -161,15 +182,14 @@ SimplexTree::CFaces SimplexTree::GetFacetsOf(SortedSimplexView simplex) const {
     return result;
 }
 
-SimplexTree::CFaces SimplexTree::GetCofacetsOf(
+SimplexTree::CFaces SimplexTree::GetCofacets(
     SortedInitializerList simplex) const {
     assert(std::is_sorted(simplex.begin(), simplex.end()));
     Simplex temp(std::move(simplex));
-    return GetCofacetsOf(std::span{temp});
+    return GetCofacets(std::span{temp});
 }
 
-SimplexTree::CFaces SimplexTree::GetCofacetsOf(
-    SortedSimplexView simplex) const {
+SimplexTree::CFaces SimplexTree::GetCofacets(SortedSimplexView simplex) const {
     assert(std::is_sorted(simplex.begin(), simplex.end()));
     CFaces result;
     const size_t k = simplex.size();
@@ -223,6 +243,11 @@ SimplexTree::CFaces SimplexTree::GetCofacetsOf(
     }
 
     return result;
+}
+
+size_t SimplexTree::GetPosition(SortedSimplexView simplex) const {
+    Node* node = TraverseDownwards(simplex);
+    return IsValid(node) ? node->pos : kNone;
 }
 
 }  // namespace topa

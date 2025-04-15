@@ -44,6 +44,8 @@ struct WSimplex {
     }
 };
 
+using WSimplices = basic_types::DefaultContainer<WSimplex>;
+
 };  // namespace topa
 
 #endif

@@ -2,7 +2,7 @@
 #define TOPA_POINTCLOUD_HPP_
 
 #include "basic_types.hpp"
-#include "flat_matrix.hpp"
+#include "detail/flat_matrix.hpp"
 
 #include <optional>
 #include <string>
@@ -16,10 +16,10 @@ class Pointcloud {
     using Point = basic_types::DefaultContainer<CoordinateType>;
     using Points = detail::FlatMatrix<CoordinateType>;
 
-    explicit Pointcloud(size_t dim);
-
+   public:
     static std::optional<Pointcloud> Load(std::string file_path);
 
+    explicit Pointcloud(size_t dim);
     void Add(Point point);
     size_t Size() const;
     const Points& GetPoints() const;

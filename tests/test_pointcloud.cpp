@@ -6,6 +6,12 @@ using namespace topa;
 using namespace Catch::Matchers;
 
 TEST_CASE("Pointcloud basic functionality", "[Pointcloud]") {
+    SECTION("Empty cloud") {
+        Pointcloud cloud(0);
+        REQUIRE(cloud.Size() == 0);
+        REQUIRE(cloud.GetPoints().size() == 0);
+    }
+
     const size_t DIM = 3;
     Pointcloud cloud(DIM);
 

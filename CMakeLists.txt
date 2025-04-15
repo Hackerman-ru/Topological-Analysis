@@ -4,7 +4,11 @@ project(topa LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(TBB REQUIRED)
+option(TOPA_ENABLE_TBB "Enable Intel TBB support" OFF)
+
+if(TOPA_ENABLE_TBB)
+    find_package(TBB REQUIRED)
+endif()
 
 set(Clang_DIR "/usr/lib/llvm-19/lib/cmake/clang")
 find_package(Clang CONFIG)
@@ -13,6 +17,10 @@ add_compile_options(-Wall -Wextra -Wpedantic)
 
 add_library(topa)
 add_library(topa::topa ALIAS topa)
+
+if(TOPA_ENABLE_TBB)
+    target_compile_definitions(topa PUBLIC TOPA_USE_TBB)
+endif()
 
 option(TOPA_ENABLE_CLANG_TIDY "Enable clang-tidy checks" ON)
 if(TOPA_ENABLE_CLANG_TIDY)
@@ -35,12 +43,13 @@ target_include_directories(topa
 file(GLOB_RECURSE TOPA_SOURCES "src/*.cpp")
 target_sources(topa PRIVATE ${TOPA_SOURCES})
 
-target_link_libraries(topa PUBLIC TBB::tbb)
-
-if(TARGET TBB::tbb)
-    target_include_directories(topa SYSTEM PUBLIC
-        $<TARGET_PROPERTY:TBB::tbb,INTERFACE_INCLUDE_DIRECTORIES>
-    )
+if(TOPA_ENABLE_TBB)
+    target_link_libraries(topa PUBLIC TBB::tbb)
+    if(TARGET TBB::tbb)
+        target_include_directories(topa SYSTEM PUBLIC
+            $<TARGET_PROPERTY:TBB::tbb,INTERFACE_INCLUDE_DIRECTORIES>
+        )
+    endif()
 endif()
 
 option(TOPA_BUILD_TESTS "Build tests" ON)
@@ -59,18 +68,8 @@ if(TOPA_BUILD_TESTS)
         set(TEST_CLANG_TIDY "")
     endif()
 
-    if(TARGET Catch2::Catch2WithMain)
-        get_target_property(_catch2_real_target Catch2::Catch2WithMain ALIASED_TARGET)
-        if(_catch2_real_target)
-            target_include_directories(${_catch2_real_target} SYSTEM INTERFACE
-                $<BUILD_INTERFACE:${catch2_SOURCE_DIR}/include>
-            )
-        else()
-            target_include_directories(Catch2::Catch2WithMain SYSTEM INTERFACE
-                $<BUILD_INTERFACE:${catch2_SOURCE_DIR}/include>
-            )
-        endif()
-    endif()
+    add_library(catch_main tools/catch_main.cpp)
+    target_link_libraries(catch_main PUBLIC Catch2::Catch2)
 
     option(TOPA_ENABLE_ASAN "Enable AddressSanitizer" OFF)
     option(TOPA_ENABLE_TSAN "Enable ThreadSanitizer" OFF)
@@ -93,7 +92,7 @@ if(TOPA_BUILD_TESTS)
         target_link_libraries(${test_name}
             PRIVATE
                 topa::topa
-                Catch2::Catch2WithMain
+                catch_main
         )
 
         target_compile_definitions(${test_name} PRIVATE DATA_DIR="${CMAKE_SOURCE_DIR}/data")
