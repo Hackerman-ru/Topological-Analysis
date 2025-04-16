@@ -1,76 +1,141 @@
 #include "simplex_tree.hpp"
-
-#include <benchmark/benchmark.h>
+#include <catch2/benchmark/catch_benchmark.hpp>
+#include <catch2/catch_test_macros.hpp>
+#include <random>
+#include <vector>
 
 using namespace topa;
 
-static void BM_AddSimplex(benchmark::State& state) {
-    SimplexTree st(100);
-    const int size = state.range(0);
+static std::vector<Simplex> GenerateSimplices(size_t count, size_t max_dim) {
+    std::vector<Simplex> simplices;
+    std::mt19937 rng(42);
+    std::uniform_int_distribution<VertexId> dist(0, 1000);
 
-    for (auto _ : state) {
-        SimplexTree::SortedSimplex s;
-        for (SimplexTree::VertexId i = 0; i < size; ++i) {
-            s.push_back(i);
+    for (size_t i = 0; i < count; ++i) {
+        Simplex s;
+        size_t dim = 1 + (i % max_dim);
+        for (size_t j = 0; j < dim; ++j) {
+            s.push_back(dist(rng));
         }
-        st.add_simplex(s, size * 1.0);
+        std::sort(s.begin(), s.end());
+        simplices.push_back(s);
     }
+    return simplices;
 }
 
-BENCHMARK(BM_AddSimplex)->Arg(2)->Arg(10)->Arg(50);
+TEST_CASE("Benchmark Add Operations") {
+    constexpr size_t kNumSimplices = 10'000;
+    auto simplices = GenerateSimplices(kNumSimplices, 5);
 
-static void BM_HasSimplex(benchmark::State& state) {
-    const int N = 100000;
-    SimplexTree st(N);
-
-    std::vector<SimplexTree::SortedSimplex> simplices;
-    for (int i = 0; i < N; ++i) {
-        simplices.push_back({i, i + 1, i + 2});
-        st.add_simplex(simplices.back(), 1.0);
-    }
-
-    size_t idx = 0;
-    for (auto _ : state) {
-        benchmark::DoNotOptimize(st.has_simplex(simplices[idx++ % N]));
-    }
+    BENCHMARK("Add 10K simplices (dim 1-5)") {
+        SimplexTree st(1001);
+        for (size_t i = 0; i < kNumSimplices; ++i) {
+            st.Add(simplices[i], i);
+        }
+        return st;
+    };
 }
 
-BENCHMARK(BM_HasSimplex);
-
-static void BM_Facets(benchmark::State& state) {
-    const int depth = state.range(0);
-    SimplexTree st(depth);
-
-    SimplexTree::SortedSimplex s;
-    for (SimplexTree::VertexId i = 0; i < depth; ++i) {
-        s.push_back(i);
-        st.add_simplex(s, i + 1.0);
+TEST_CASE("Benchmark Has Operations") {
+    SimplexTree st(1001);
+    constexpr size_t kNumSimplices = 10'000;
+    auto simplices = GenerateSimplices(kNumSimplices, 5);
+    for (size_t i = 0; i < kNumSimplices; ++i) {
+        st.Add(simplices[i], i);
     }
 
-    for (auto _ : state) {
-        auto facets = st.facets(s);
-        benchmark::DoNotOptimize(facets);
-    }
+    BENCHMARK_ADVANCED("Has (hit)")(Catch::Benchmark::Chronometer meter) {
+        std::mt19937 rng(42);
+        std::uniform_int_distribution<size_t> dist(0, kNumSimplices - 1);
+
+        meter.measure([&] {
+            return st.Has(simplices[dist(rng)]);
+        });
+    };
+
+    auto rnd_simplices = GenerateSimplices(kNumSimplices, 5);
+    BENCHMARK_ADVANCED("Has (rand)")(Catch::Benchmark::Chronometer meter) {
+        std::mt19937 rng(42);
+        std::uniform_int_distribution<size_t> dist(0, kNumSimplices - 1);
+
+        meter.measure([&] {
+            return st.Has(rnd_simplices[dist(rng)]);
+        });
+    };
 }
 
-BENCHMARK(BM_Facets)->Arg(10)->Arg(100)->Arg(1000);
-
-static void BM_Cofacets(benchmark::State& state) {
-    const int width = state.range(0);
-    SimplexTree st(width + 1);
-
-    st.add_simplex({0}, 1.0);
-    for (SimplexTree::VertexId i = 1; i <= width; ++i) {
-        st.add_simplex({0, i}, 2.0);
+TEST_CASE("Benchmark Facet/Cofacet Operations") {
+    SimplexTree st(1001);
+    for (VertexId a = 0; a < 10; ++a) {
+        st.Add({a}, a);
+        for (VertexId b = a + 1; b < 10; ++b) {
+            st.Add({a, b}, a * 10 + b);
+            for (VertexId c = b + 1; c < 10; ++c) {
+                st.Add({a, b, c}, a * 100 + b * 10 + c);
+            }
+        }
     }
 
-    SimplexTree::SortedSimplex root = {0};
-    for (auto _ : state) {
-        auto cofacets = st.cofacets(root);
-        benchmark::DoNotOptimize(cofacets);
-    }
+    BENCHMARK("GetFacets (3-simplex)") {
+        return st.GetFacets({3, 5, 7});
+    };
+
+    BENCHMARK("GetCofacets (2-simplex)") {
+        return st.GetCofacets({2, 4});
+    };
 }
 
-BENCHMARK(BM_Cofacets)->Arg(10)->Arg(1000)->Arg(10000);
+TEST_CASE("Benchmark: GetFacets for Large Simplex") {
+    SimplexTree st(100);
+    st.Add({0, 1, 2, 3, 4}, 100);
 
-BENCHMARK_MAIN();
+    st.Add({0, 1, 2, 3}, 1);
+    st.Add({0, 1, 2, 4}, 2);
+    st.Add({0, 1, 3, 4}, 3);
+    st.Add({0, 2, 3, 4}, 4);
+    st.Add({1, 2, 3, 4}, 5);
+
+    BENCHMARK("GetFacets for 5-vertex simplex") {
+        return st.GetFacets({0, 1, 2, 3, 4});
+    };
+}
+
+TEST_CASE("Benchmark: GetCofacets in Dense Tree") {
+    SimplexTree st(50);
+
+    for (size_t i = 0; i < 5; ++i) {
+        Simplex s;
+        for (size_t j = 0; j <= i; ++j) {
+            s.push_back(j);
+        }
+        st.Add(s, i);
+    }
+
+    BENCHMARK("GetCofacets for 3-vertex simplex") {
+        return st.GetCofacets({0, 1, 2});
+    };
+}
+
+TEST_CASE("Benchmark Move Operations") {
+    constexpr size_t kNumSimplices = 100'000;
+    auto simplices = GenerateSimplices(kNumSimplices, 3);
+
+    BENCHMARK("Move constructor") {
+        SimplexTree src(1001);
+        for (size_t i = 0; i < kNumSimplices; ++i) {
+            src.Add(simplices[i], i);
+        }
+        SimplexTree dst = std::move(src);
+        return dst;
+    };
+
+    BENCHMARK("Move assignment") {
+        SimplexTree src(1001);
+        SimplexTree dst(0);
+        for (size_t i = 0; i < kNumSimplices; ++i) {
+            src.Add(simplices[i], i);
+        }
+        dst = std::move(src);
+        return dst;
+    };
+}

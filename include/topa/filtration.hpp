@@ -12,8 +12,7 @@ namespace topa {
 
 class Filtration {
    private:
-    class Builder {
-       public:
+    struct Builder {
         virtual ~Builder() = default;
         virtual WSimplices Build(const Pointcloud& cloud) const = 0;
     };

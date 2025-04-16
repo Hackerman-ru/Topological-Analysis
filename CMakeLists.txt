@@ -4,10 +4,15 @@ project(topa LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+option(TOPA_ENABLE_EIGEN "Enable Eigen support" OFF)
 option(TOPA_ENABLE_TBB "Enable Intel TBB support" OFF)
 
 if(TOPA_ENABLE_TBB)
     find_package(TBB REQUIRED)
+endif()
+
+if(TOPA_ENABLE_EIGEN)
+    find_package(Eigen3 REQUIRED)
 endif()
 
 set(Clang_DIR "/usr/lib/llvm-19/lib/cmake/clang")
@@ -17,6 +22,10 @@ add_compile_options(-Wall -Wextra -Wpedantic)
 
 add_library(topa)
 add_library(topa::topa ALIAS topa)
+
+if(TOPA_ENABLE_EIGEN)
+    target_compile_definitions(topa PUBLIC TOPA_USE_EIGEN)
+endif()
 
 if(TOPA_ENABLE_TBB)
     target_compile_definitions(topa PUBLIC TOPA_USE_TBB)
@@ -42,6 +51,15 @@ target_include_directories(topa
 
 file(GLOB_RECURSE TOPA_SOURCES "src/*.cpp")
 target_sources(topa PRIVATE ${TOPA_SOURCES})
+
+if(TOPA_ENABLE_EIGEN)
+    target_link_libraries(topa PUBLIC Eigen3::Eigen)
+    if(TARGET Eigen3::Eigen)
+        target_include_directories(topa SYSTEM PUBLIC
+            $<TARGET_PROPERTY:Eigen3::Eigen,INTERFACE_INCLUDE_DIRECTORIES>
+        )
+    endif()
+endif()
 
 if(TOPA_ENABLE_TBB)
     target_link_libraries(topa PUBLIC TBB::tbb)

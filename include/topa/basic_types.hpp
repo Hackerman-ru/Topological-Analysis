@@ -5,6 +5,7 @@
 #include <map>
 #include <span>
 #include <vector>
+#include <unordered_set>
 
 namespace topa::basic_types {
 
@@ -17,6 +18,9 @@ using DefaultView = std::span<T>;
 
 template <typename T>
 using DefaultContainer = std::vector<T>;
+
+template <typename T>
+using DefaultUnorderedSet = std::unordered_set<T>;
 
 template <typename K, typename V>
 using DefaultMap = std::map<K, V>;

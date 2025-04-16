@@ -2,8 +2,7 @@
 #define TOPA_SIMPLEX_TREE_HPP_
 
 #include "basic_types.hpp"
-#include "filtration.hpp"
-#include "pointcloud.hpp"
+#include "position.hpp"
 #include "simplex.hpp"
 
 #include <algorithm>
@@ -16,9 +15,7 @@ class SimplexTree {
    public:
     using SortedInitializerList = std::initializer_list<VertexId>;
     using SortedSimplexView = basic_types::DefaultView<const VertexId>;
-    using CFaces = basic_types::DefaultContainer<Simplex>;
-
-    static constexpr size_t kNone = std::numeric_limits<size_t>::max();
+    using CFaces = basic_types::DefaultContainer<Position>;
 
    private:
     struct Node;
@@ -29,8 +26,7 @@ class SimplexTree {
         Node* previous = nullptr;
         Node* sibling = nullptr;
         VertexId vertex_id;
-        // Position in the sorted list of filtered simplices
-        size_t pos = kNone;
+        Position pos = kNonePos;
         NextMap next;
     };
 
@@ -46,8 +42,8 @@ class SimplexTree {
     SimplexTree(SimplexTree&& other) noexcept;
     SimplexTree& operator=(SimplexTree&& other) noexcept;
 
-    void Add(SortedInitializerList simplex, size_t pos);
-    void Add(SortedSimplexView simplex, size_t pos);
+    void Add(SortedInitializerList simplex, Position pos);
+    void Add(SortedSimplexView simplex, Position pos);
 
     bool Has(SortedInitializerList simplex) const;
     bool Has(SortedSimplexView simplex) const;
@@ -58,11 +54,14 @@ class SimplexTree {
     CFaces GetCofacets(SortedInitializerList simplex) const;
     CFaces GetCofacets(SortedSimplexView simplex) const;
 
-    size_t GetPosition(SortedSimplexView simplex) const;
+    Position GetPosition(SortedInitializerList simplex) const;
+    Position GetPosition(SortedSimplexView simplex) const;
+
+    size_t GetVerticesNumber() const;
 
    private:
     static bool IsValid(Node* node);
-    static Simplex SimplexFrom(Node* node);
+    static bool IsSubsimplex(Node* node, Node* subnode, size_t skips);
 
     void DeleteSubtree(Node* node);
     void LinkToList(Node* node, size_t depth, VertexId id);
@@ -71,7 +70,7 @@ class SimplexTree {
 
    private:
     RootNode root_;
-    std::vector<NextMap> lists_heads_;
+    basic_types::DefaultContainer<NextMap> lists_heads_;
 };
 
 }  // namespace topa

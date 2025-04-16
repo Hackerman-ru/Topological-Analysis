@@ -11,20 +11,14 @@ class Complex {
    public:
     static Complex From(const Pointcloud& cloud, const Filtration& filtration);
 
-    const std::vector<WSimplex>& Simplices() const {
-        return wsimplices_;
-    }
-    const SimplexTree& Tree() const {
-        return tree_;
-    }
+    const WSimplices& GetSimplices() const;
+    Positions GetFacetsPosition(Position pos) const;
+    Positions GetCofacetsPosition(Position pos) const;
 
    private:
-    Complex(std::vector<WSimplex> wsimplices, SimplexTree tree)
-        : wsimplices_(std::move(wsimplices)),
-          tree_(std::move(tree)) {
-    }
+    Complex(WSimplices wsimplices, SimplexTree tree);
 
-    std::vector<WSimplex> wsimplices_;
+    WSimplices wsimplices_;
     SimplexTree tree_;
 };
 

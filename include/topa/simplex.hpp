@@ -3,6 +3,7 @@
 
 #include "basic_types.hpp"
 
+#include <cstdlib>
 #include <limits>
 
 namespace topa {

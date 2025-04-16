@@ -13,8 +13,6 @@ def clean_off_file(input_path, output_path, precision=3):
     vertices = []
     for line in lines[2:2+num_vertices]:
         parts = line.split()
-        if len(parts) != 3:
-            continue
         try:
             vertex = tuple(map(float, parts))
             vertices.append(vertex)
