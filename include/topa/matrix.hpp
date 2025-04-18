@@ -2,11 +2,17 @@
 #define TOPA_MATRIX_HPP_
 
 #include "basic_types.hpp"
+#include "position.hpp"
+
+#include <string>
 
 namespace topa {
 
-template <typename T>
-using Matrix = basic_types::DefaultContainer<basic_types::DefaultContainer<T>>;
+using Matrix =
+    basic_types::DefaultUnorderedMap<size_t,
+                                     basic_types::DefaultContainer<Position>>;
+
+void PrintMatrix(const Matrix& matrix, size_t n, const std::string& title);
 
 }  // namespace topa
 

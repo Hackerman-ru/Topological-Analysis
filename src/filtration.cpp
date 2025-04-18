@@ -10,93 +10,6 @@
 
 namespace topa {
 
-namespace {
-
-using Graph = basic_types::DefaultMap<VertexId, std::vector<VertexId>>;
-
-Graph BuildAdjacencyGraph(const Pointcloud& cloud, Weight max_radius) {
-    Graph graph;
-    const auto cloud_size = static_cast<VertexId>(cloud.Size());
-    Weight sq_max_radius = max_radius * max_radius;
-
-    for (VertexId u = 0; u < cloud_size; ++u) {
-        for (VertexId v = u + 1; v < cloud_size; ++v) {
-            if (cloud.SquaredEucledianDistance(u, v) <= sq_max_radius) {
-                graph[u].push_back(v);
-            }
-        }
-    }
-
-    return graph;
-}
-
-std::vector<VertexId> UpperNeighbors(const Graph& graph, VertexId u) {
-    auto it = graph.find(u);
-    return (it != graph.end()) ? it->second : std::vector<VertexId>{};
-}
-
-std::vector<VertexId> TableLookup(const Graph& graph,
-                                  const std::vector<VertexId>& n, VertexId v) {
-    std::vector<VertexId> m;
-    const auto& neighbors = UpperNeighbors(graph, v);
-
-    std::ranges::set_intersection(n, neighbors, std::back_inserter(m));
-
-    return m;
-}
-
-void NewAddCofaces(const Pointcloud& cloud, const Graph& graph, size_t max_dim,
-                   const Simplex& tau, const std::vector<VertexId>& n,
-                   Weight current_weight, WSimplices& simplices) {
-    simplices.push_back({tau, current_weight});
-
-    if (tau.size() - 1 >= max_dim) {
-        return;
-    }
-
-    for (VertexId v : n) {
-        if (v <= tau.back()) {
-            continue;
-        }
-
-        Simplex sigma = tau;
-        sigma.push_back(v);
-        std::sort(sigma.begin(), sigma.end());
-
-        Weight new_weight = current_weight;
-        for (auto u : tau) {
-            new_weight = std::max(new_weight, cloud.EuclideanDistance(u, v));
-        }
-
-        auto m = TableLookup(graph, n, v);
-        NewAddCofaces(cloud, graph, max_dim, sigma, m, new_weight, simplices);
-    }
-}
-
-}  // namespace
-
-Filtration::VietorisRipsBuilder::VietorisRipsBuilder(Weight max_radius,
-                                                     size_t max_dim)
-    : max_radius_(max_radius),
-      max_dim_(max_dim) {
-}
-
-WSimplices Filtration::VietorisRipsBuilder::Build(
-    const Pointcloud& cloud) const {
-    WSimplices simplices;
-    const auto cloud_size = static_cast<VertexId>(cloud.Size());
-    const auto graph = BuildAdjacencyGraph(cloud, max_radius_);
-
-    for (VertexId u = 0; u < cloud_size; ++u) {
-        Simplex tau = {u};
-        auto n = UpperNeighbors(graph, u);
-        NewAddCofaces(cloud, graph, max_dim_, tau, n, 0.0f, simplices);
-    }
-
-    std::sort(simplices.begin(), simplices.end());
-    return simplices;
-}
-
 #ifdef TOPA_USE_TBB
 WSimplices Filtration::FullVietorisRipsBuilder::Build(
     const Pointcloud& cloud) const {
@@ -177,11 +90,6 @@ WSimplices Filtration::FullVietorisRipsBuilder::Build(
     return simplices;
 }
 #endif
-
-Filtration Filtration::VietorisRips(Weight max_radius, size_t max_dim) {
-    return Filtration(
-        std::make_unique<VietorisRipsBuilder>(max_radius, max_dim));
-}
 
 Filtration Filtration::FullVietorisRips() {
     return Filtration(std::make_unique<FullVietorisRipsBuilder>());

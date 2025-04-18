@@ -3,8 +3,6 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
-#include <unordered_map>
-#include <unordered_set>
 
 using namespace topa;
 
@@ -40,37 +38,6 @@ bool contains_simplex(const std::map<Simplex, Weight>& map, const Simplex& s) {
 }
 }  // namespace
 
-TEST_CASE("VietorisRips filtration", "[filtration][vr]") {
-    Pointcloud cloud(3);
-    cloud.Add({0, 0, 0});
-    cloud.Add({1, 0, 0});
-    cloud.Add({1, 1, 0});
-    cloud.Add({0, 1, 1});
-
-    SECTION("Max parameters include all simplices") {
-        auto filtration = Filtration::VietorisRips(2.0f, 3);
-        auto simplices = filtration.Build(cloud);
-
-        REQUIRE(count_simplices_of_dim(simplices, 0) == 4);
-        REQUIRE(count_simplices_of_dim(simplices, 1) >= 6);
-    }
-
-    SECTION("Radius cutoff") {
-        auto filtration = Filtration::VietorisRips(1.1f, 2);
-        auto simplices = filtration.Build(cloud);
-
-        bool all_within_radius = true;
-        for (const auto& s : simplices) {
-            if (s.simplex.size() == 2) {
-                auto d = cloud.EuclideanDistance(s.simplex[0], s.simplex[1]);
-                if (d > 1.1f)
-                    all_within_radius = false;
-            }
-        }
-        REQUIRE(all_within_radius);
-    }
-}
-
 TEST_CASE("FullVietorisRips filtration", "[filtration][fullvr]") {
     Pointcloud cloud(2);
     cloud.Add({0, 0});
@@ -87,29 +54,6 @@ TEST_CASE("FullVietorisRips filtration", "[filtration][fullvr]") {
     }
 }
 
-TEST_CASE("Klein bottle integration", "[integration][slow]") {
-    auto cloud = Pointcloud::Load(DATA_DIR "/pointclouds/klein.off");
-
-    auto filtration = Filtration::VietorisRips(0.4f, 2);
-    auto simplices = filtration.Build(*cloud);
-
-    std::map<Simplex, Weight> simplex_map;
-    for (const auto& ws : simplices) {
-        Simplex sorted = ws.simplex;
-        std::sort(sorted.begin(), sorted.end());
-        simplex_map[sorted] = ws.weight;
-    }
-
-    size_t missing_faces = 0;
-    for (const auto& ws : simplices) {
-        for (const auto& face : generate_faces(ws.simplex)) {
-            if (!contains_simplex(simplex_map, face))
-                missing_faces++;
-        }
-    }
-    REQUIRE(missing_faces == 0);
-}
-
 TEST_CASE("Stress tests", "[stress]") {
     SECTION("Large point cloud") {
         Pointcloud cloud(3);
@@ -120,22 +64,6 @@ TEST_CASE("Stress tests", "[stress]") {
 
         auto simplices = Filtration::FullVietorisRips().Build(cloud);
         REQUIRE(count_simplices_of_dim(simplices, 1) == (N * (N - 1)) / 2);
-    }
-}
-
-TEST_CASE("Edge cases", "[edge]") {
-    SECTION("Empty cloud") {
-        Pointcloud cloud(3);
-        auto simplices = Filtration::VietorisRips().Build(cloud);
-        REQUIRE(simplices.empty());
-    }
-
-    SECTION("Single point") {
-        Pointcloud cloud(3);
-        cloud.Add({0, 0, 0});
-        auto simplices = Filtration::VietorisRips().Build(cloud);
-        REQUIRE(simplices.size() == 1);
-        REQUIRE(simplices[0].simplex.size() == 1);
     }
 }
 

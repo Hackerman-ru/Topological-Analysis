@@ -23,7 +23,7 @@ TEST_CASE("SimplexTree Add and Has") {
 
     REQUIRE(st.Has({3}) == false);
     REQUIRE(st.Has({0, 2}) == false);
-    REQUIRE(st.GetPosition({0, 2}) == SimplexTree::kNone);
+    REQUIRE(st.GetPosition({0, 2}) == kNonePos);
 }
 
 TEST_CASE("GetFacets: Basic Functionality") {
@@ -53,7 +53,7 @@ TEST_CASE("GetFacets: Basic Functionality") {
 
     SECTION("Facets of 0-simplex (vertex)") {
         auto facets = st.GetFacets({0});
-        REQUIRE(facets.empty());  // У вершины нет граней
+        REQUIRE(facets.empty());
     }
 
     SECTION("Non-existent simplex") {

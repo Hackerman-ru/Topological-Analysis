@@ -1,114 +1,106 @@
 #include "reducer.hpp"
-#include "complex.hpp"
+#include "filtered_complex.hpp"
 #include "boundary_matrix.hpp"
 #include "detail/bit_tree_column.hpp"
 
-#include <unordered_set>
-#include <bits/chrono.h>
-#include <iostream>
+#include <ranges>
 
 namespace topa {
 
-static void ReduceMatrix(const WSimplices& simplices, Matrix<size_t>& matrix,
-                         detail::BitTreeColumn& fast_column,
-                         basic_types::DefaultView<size_t> sizes,
-                         std::string name) {
-    const size_t n = matrix.size();
-    // size_t nonzero_entries = 0;
-    // for (Position pos = 0; pos < n; ++pos) {
-    //     nonzero_entries += matrix[pos].size();
-    // }
-    // std::cout << "Nonzero entries at start: " << nonzero_entries << '\n';
-    auto start = std::chrono::system_clock::now();
-    std::cout << "Start reducing " << name << "...\n";
-    basic_types::DefaultContainer<size_t> arglow(n);
+class ReduceSession {
+    using Arglow = basic_types::DefaultContainer<size_t>;
 
-    for (const auto& size : sizes) {
-        for (Position pos = 0; pos < n; ++pos) {
-            if (simplices[pos].simplex.size() != size) {
-                continue;
-            }
-            if (matrix[pos].empty()) {
+   public:
+    explicit ReduceSession(size_t simplex_number)
+        : lows_(simplex_number, kNoneLow),
+          arglow_(simplex_number, kNoneLow),
+          fast_column_(simplex_number) {
+    }
+
+    void ReduceMatrix(Matrix& matrix, auto&& poses) {
+        for (const Position& pos : poses) {
+            if (!matrix.contains(pos)) {
                 continue;
             }
 
-            fast_column.Add(matrix[pos]);
-            Position pivot = fast_column.GetMaxPos();
+            fast_column_.Add(matrix[pos]);
+            Position pivot = fast_column_.GetMaxPos();
 
-            while (!fast_column.Empty() && arglow[pivot] != 0) {
-                fast_column.Add(matrix[arglow[pivot]]);
-                pivot = fast_column.GetMaxPos();
+            while (!fast_column_.Empty() && arglow_[pivot] != kNoneLow) {
+                fast_column_.Add(matrix[arglow_[pivot]]);
+                pivot = fast_column_.GetMaxPos();
             }
 
-            if (!fast_column.Empty()) {
-                arglow[pivot] = pos;
-                matrix[pivot].clear();
+            if (!fast_column_.Empty()) {
+                arglow_[pivot] = pos;
+                matrix.erase(pivot);
+                lows_[pivot] = kNoneLow;
             }
-            matrix[pos] = fast_column.PopAll();
+            lows_[pos] = pivot;
+            matrix[pos] = fast_column_.PopAll();
         }
     }
-    auto end = std::chrono::system_clock::now();
-    // nonzero_entries = 0;
-    // for (Position pos = 0; pos < n; ++pos) {
-    //     nonzero_entries += matrix[pos].size();
-    // }
-    // std::cout << "Nonzero entries at finish: " << nonzero_entries << '\n';
-    std::chrono::duration<double> elapsed_seconds = end - start;
-    std::cout << "Reduce elapsed time: " << elapsed_seconds.count() << "s"
-              << '\n';
-}
+
+    void Clear() {
+        std::ranges::fill(lows_, kNoneLow);
+        std::ranges::fill(arglow_, kNoneLow);
+    }
+
+    Lows GetLows() const {
+        return lows_;
+    }
+
+   private:
+    Lows lows_;
+    Arglow arglow_;
+    detail::BitTreeColumn fast_column_;
+};
 
 class Reducer::TwistReducer : public Reducer::IReducer {
    public:
-    Matrix<size_t> Reduce(const Complex& complex) const override {
-        auto start = std::chrono::system_clock::now();
-        const auto& simplices = complex.GetSimplices();
-        Matrix<size_t> matrix = BoundaryMatrix(complex);
-        detail::BitTreeColumn fast_column(matrix.size());
-        basic_types::DefaultContainer<size_t> sizes = {3u, 2u};
-        ReduceMatrix(simplices, matrix, fast_column, sizes, "Boundary Matrix");
-        auto end = std::chrono::system_clock::now();
-        std::chrono::duration<double> elapsed_seconds = end - start;
-        std::cout << "Twist-Reduce total elapsed time: "
-                  << elapsed_seconds.count() << "s" << '\n';
-        return matrix;
+    Lows Reduce(const FilteredComplex& complex) const override {
+        const size_t n = complex.GetSimplices().size();
+        ReduceSession session(n);
+        Matrix matrix = BoundaryMatrix(complex);
+        session.ReduceMatrix(matrix, complex.GetPosesBySize(3));
+        session.ReduceMatrix(matrix, complex.GetPosesBySize(2));
+        return session.GetLows();
     }
 };
 
 class Reducer::DoubleTwistReducer : public Reducer::IReducer {
    public:
-    Matrix<size_t> Reduce(const Complex& complex) const override {
-        auto start = std::chrono::system_clock::now();
-        const auto& simplices = complex.GetSimplices();
-        Matrix<size_t> matrix = CoboundaryMatrix(complex);
-        detail::BitTreeColumn fast_column(matrix.size());
-        basic_types::DefaultContainer<size_t> sizes = {1u, 2u};
-        ReduceMatrix(simplices, matrix, fast_column, sizes,
-                     "Coboundary Matrix");
+    Lows Reduce(const FilteredComplex& complex) const override {
+        const size_t n = complex.GetSimplices().size();
+        ReduceSession session(n);
+        Matrix matrix = CoboundaryMatrix(complex);
+        auto rv1 = complex.GetPosesBySize(1) |
+                   std::views::transform([n](const Position& pos) -> Position {
+                       return n - 1 - pos;
+                   });
+        session.ReduceMatrix(matrix, rv1);
+        auto rv2 = complex.GetPosesBySize(2) |
+                   std::views::transform([n](const Position& pos) -> Position {
+                       return n - 1 - pos;
+                   });
+        session.ReduceMatrix(matrix, rv2);
 
-        auto saved_pos = GetSavedPos(std::move(matrix));
+        auto saved_pos = GetSavedPos(session.GetLows(), n);
+        session.Clear();
         matrix = BoundaryMatrixFiltered(complex, saved_pos);
-        sizes = {3u, 2u};
-        ReduceMatrix(simplices, matrix, fast_column, sizes, "Boundary Matrix");
-        auto end = std::chrono::system_clock::now();
-        std::chrono::duration<double> elapsed_seconds = end - start;
-        std::cout << "DoubleTwist-Reduce total elapsed time: "
-                  << elapsed_seconds.count() << "s" << '\n';
-        return matrix;
+
+        session.ReduceMatrix(matrix, complex.GetPosesBySize(3));
+        session.ReduceMatrix(matrix, complex.GetPosesBySize(2));
+        return session.GetLows();
     }
 
    private:
-    static basic_types::DefaultContainer<Position> GetSavedPos(
-        const Matrix<size_t>& matrix) {
+    static basic_types::DefaultContainer<Position> GetSavedPos(const Lows& lows,
+                                                               size_t n) {
         basic_types::DefaultContainer<Position> result;
-        detail::BitTreeColumn fast_column(matrix.size());
-
-        for (Position pos = 0; pos < matrix.size(); ++pos) {
-            if (!matrix[pos].empty()) {
-                fast_column.Add(matrix[pos]);
-                result.emplace_back(matrix.size() - 1 -
-                                    fast_column.GetMaxPos());
-                fast_column.Clear();
+        for (size_t i = 0; i < n; ++i) {
+            if (lows[i] != kNoneLow) {
+                result.emplace_back(n - 1 - lows[i]);
             }
         }
         return result;
@@ -123,7 +115,7 @@ Reducer Reducer::DoubleTwist() {
     return Reducer{std::make_unique<DoubleTwistReducer>()};
 }
 
-Matrix<size_t> Reducer::Reduce(const Complex& complex) const {
+Lows Reducer::Reduce(const FilteredComplex& complex) const {
     return strategy_->Reduce(complex);
 }
 

@@ -1,4 +1,4 @@
-#include "flat_matrix.hpp"
+#include "detail/flat_matrix.hpp"
 
 #include <algorithm>
 #include <catch2/catch_test_macros.hpp>
@@ -22,7 +22,7 @@ TEST_CASE("push_back and pop_back", "[FlatMatrix]") {
     matrix.push_back({1, 2});
     REQUIRE(matrix.size() == 1);
 
-    matrix.push_back(std::vector<int> {3, 4});
+    matrix.push_back(std::vector<int>{3, 4});
     REQUIRE(matrix.size() == 2);
 
     matrix.pop_back();
@@ -66,11 +66,11 @@ TEST_CASE("Iterators", "[FlatMatrix]") {
     matrix.push_back({3, 4});
 
     std::vector<int> all_elements(matrix.begin(), matrix.end());
-    REQUIRE(all_elements == std::vector<int> {1, 2, 3, 4});
+    REQUIRE(all_elements == std::vector<int>{1, 2, 3, 4});
 
     auto row = matrix[1];
     std::vector<int> row_elements(row.begin(), row.end());
-    REQUIRE(row_elements == std::vector<int> {3, 4});
+    REQUIRE(row_elements == std::vector<int>{3, 4});
 }
 
 TEST_CASE("Conversion to vector", "[FlatMatrix]") {
@@ -78,7 +78,7 @@ TEST_CASE("Conversion to vector", "[FlatMatrix]") {
     matrix.push_back({1, 2, 3});
 
     std::vector<int> row0_vec = matrix[0];
-    REQUIRE(row0_vec == std::vector<int> {1, 2, 3});
+    REQUIRE(row0_vec == std::vector<int>{1, 2, 3});
 }
 
 TEST_CASE("Clear and reserve", "[FlatMatrix]") {
@@ -98,7 +98,7 @@ TEST_CASE("Const FlatMatrix access", "[FlatMatrix]") {
     REQUIRE(crow[1] == 2);
 
     std::vector<int> vec = crow;
-    REQUIRE(vec == std::vector<int> {1, 2});
+    REQUIRE(vec == std::vector<int>{1, 2});
 }
 
 TEST_CASE("Row iterators", "[FlatMatrix]") {
@@ -129,7 +129,8 @@ TEST_CASE("Stress test: many rows", "[FlatMatrix][stress]") {
     REQUIRE(matrix.size() == NUM_ROWS);
     REQUIRE(matrix[0][0] == 0);
     REQUIRE(matrix[999][0] == 999);
-    REQUIRE(matrix[NUM_ROWS - 1][ROW_SIZE - 1] == static_cast<int>(NUM_ROWS - 1));
+    REQUIRE(matrix[NUM_ROWS - 1][ROW_SIZE - 1] ==
+            static_cast<int>(NUM_ROWS - 1));
 }
 
 TEST_CASE("Stress test: large data", "[FlatMatrix][stress]") {

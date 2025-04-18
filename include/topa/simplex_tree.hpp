@@ -24,7 +24,6 @@ class SimplexTree {
 
     struct Node {
         Node* previous = nullptr;
-        Node* sibling = nullptr;
         VertexId vertex_id;
         Position pos = kNonePos;
         NextMap next;
@@ -64,13 +63,11 @@ class SimplexTree {
     static bool IsSubsimplex(Node* node, Node* subnode, size_t skips);
 
     void DeleteSubtree(Node* node);
-    void LinkToList(Node* node, size_t depth, VertexId id);
     Node* TraverseDownwards(SortedSimplexView simplex,
                             Node* current_node = nullptr) const;
 
    private:
     RootNode root_;
-    basic_types::DefaultContainer<NextMap> lists_heads_;
 };
 
 }  // namespace topa

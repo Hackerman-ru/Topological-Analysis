@@ -15,7 +15,8 @@
                 "TOPA_BUILD_TESTS": "ON",
                 "TOPA_ENABLE_CLANG_TIDY": "ON",
                 "TOPA_ENABLE_ASAN": "OFF",
-                "TOPA_ENABLE_TSAN": "OFF"
+                "TOPA_ENABLE_TSAN": "OFF",
+                "CMAKE_CXX_FLAGS": "-Wall -Wextra -Wpedantic"
             }
         },
         {
@@ -49,7 +50,8 @@
             "displayName": "Release Configuration",
             "inherits": "base",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release"
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_CXX_FLAGS_RELEASE": "-O3 -march=native"
             }
         },
         {
@@ -57,7 +59,8 @@
             "displayName": "Release with Debug Info",
             "inherits": "base",
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "CMAKE_CXX_FLAGS_RELWITHDEBINFO": "-O2 -g -march=native"
             }
         }
     ],

@@ -17,10 +17,8 @@ SimplexTree::~SimplexTree() {
 }
 
 SimplexTree::SimplexTree(SimplexTree&& other) noexcept
-    : root_(std::move(other.root_)),
-      lists_heads_(std::move(other.lists_heads_)) {
+    : root_(std::move(other.root_)) {
     other.root_.clear();
-    other.lists_heads_.clear();
 }
 
 SimplexTree& SimplexTree::operator=(SimplexTree&& other) noexcept {
@@ -30,10 +28,8 @@ SimplexTree& SimplexTree::operator=(SimplexTree&& other) noexcept {
         }
 
         root_ = std::move(other.root_);
-        lists_heads_ = std::move(other.lists_heads_);
 
         other.root_.clear();
-        other.lists_heads_.clear();
     }
     return *this;
 }
@@ -60,7 +56,6 @@ void SimplexTree::Add(SortedSimplexView simplex, Position pos) {
             *next_node = new Node;
             (*next_node)->previous = current_node;
             (*next_node)->vertex_id = vid;
-            LinkToList(*next_node, depth, vid);
         }
         current_node = *next_node;
         ++depth;
@@ -115,16 +110,6 @@ void SimplexTree::DeleteSubtree(Node* node) {
         DeleteSubtree(child);
     }
     delete node;
-}
-
-void SimplexTree::LinkToList(Node* node, size_t depth, VertexId id) {
-    if (lists_heads_.size() <= depth) {
-        lists_heads_.resize(depth + 1);
-    }
-    // (iterator to (key, value); bool)
-    auto pair = lists_heads_[depth].try_emplace(id, nullptr);
-    node->sibling = (*pair.first).second;
-    lists_heads_[depth][id] = node;
 }
 
 SimplexTree::Node* SimplexTree::TraverseDownwards(SortedSimplexView simplex,
@@ -196,26 +181,11 @@ SimplexTree::CFaces SimplexTree::GetCofacets(SortedSimplexView simplex) const {
     CFaces result;
     const size_t k = simplex.size();
 
-    if (k == 0) {
-        for (const auto& node : root_) {
-            if (!IsValid(node)) {
-                continue;
-            }
-            result.emplace_back(node->pos);
-        }
-        return result;
-    }
-
-    if (k + 1 >= lists_heads_.size()) {
+    if (k >= 3) {
         return result;
     }
 
     Node* src_node = TraverseDownwards(simplex);
-    if (!IsValid(src_node)) {
-        return result;
-    }
-
-    Simplex coface(simplex.begin(), simplex.end());
     for (const auto& [_, child] : src_node->next) {
         if (!IsValid(child)) {
             continue;
@@ -223,22 +193,28 @@ SimplexTree::CFaces SimplexTree::GetCofacets(SortedSimplexView simplex) const {
         result.emplace_back(child->pos);
     }
 
-    const auto& depth_map = lists_heads_[k + 1];
-    auto it = depth_map.find(simplex.back());
-    if (it == depth_map.end()) {
-        return result;
-    }
-
-    for (Node* current_node = it->second; current_node != nullptr;
-         current_node = current_node->sibling) {
-        if (!IsValid(current_node)) {
+    auto it = simplex.begin();
+    VertexId n = GetVerticesNumber();
+    for (VertexId vid = 0; vid < n; ++vid) {
+        if (*it == vid) {
+            ++it;
+            if (it == simplex.end()) {
+                break;
+            }
             continue;
         }
-        if (IsSubsimplex(current_node, src_node, 1)) {
-            result.emplace_back(current_node->pos);
+        Simplex coface;
+        coface.reserve(k + 1);
+        bool pushed_vid = false;
+        for (VertexId i : simplex) {
+            if (i >= vid && !pushed_vid) {
+                coface.emplace_back(vid);
+                pushed_vid = true;
+            }
+            coface.emplace_back(i);
         }
+        result.emplace_back(GetPosition(coface));
     }
-
     return result;
 }
 
