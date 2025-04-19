@@ -18,6 +18,8 @@ class FilteredComplex {
     FilteredComplex(SortedWSimplices wsimplices, size_t vertices_number);
 
     const WSimplices& GetSimplices() const;
+    size_t Size() const;
+    size_t GetSizeByPos(Position pos) const;
     const Positions& GetPosesBySize(size_t size) const;
     Positions GetFacetsPosition(Position pos) const;
     Positions GetCofacetsPosition(Position pos) const;

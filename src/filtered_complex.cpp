@@ -31,6 +31,14 @@ const WSimplices& FilteredComplex::GetSimplices() const {
     return wsimplices_;
 }
 
+size_t FilteredComplex::Size() const {
+    return wsimplices_.size();
+}
+
+size_t FilteredComplex::GetSizeByPos(Position pos) const {
+    return wsimplices_[pos].simplex.size();
+}
+
 const Positions& FilteredComplex::GetPosesBySize(size_t size) const {
     return dim_poses_[size - 1];
 }

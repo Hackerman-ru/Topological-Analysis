@@ -2,6 +2,7 @@
 
 #include "svd.hpp"
 
+#include <format>
 #include <eigen3/Eigen/SVD>
 #ifdef TOPA_USE_TBB
 #include <tbb/parallel_for_each.h>
@@ -28,34 +29,6 @@ static VectorF AExistsInB(MatrixF&& a, MatrixF&& b) {
         a.col(0);
     }
 
-    // size_t b_rows = b.rows();
-    // Eigen::ColPivHouseholderQR<MatrixF> qr(std::move(b));
-    // const int rank = qr.rank();
-
-    // if (rank == 0) {
-    //     return a.col(0);
-    // }
-
-    // MatrixF q = qr.matrixQ() * MatrixF::Identity(b_rows, rank);
-    // MatrixF qt = q.transpose();
-
-    // size_t best_col = 0;
-    // float max_residual_norm = 0;
-
-    // for (int i = 0; i < a.cols(); ++i) {
-    //     const VectorF a_i = a.col(i);
-    //     const VectorF proj = q * (q.transpose() * a_i);
-    //     const VectorF residual = a_i - proj;
-    //     const float residual_norm = residual.norm();
-
-    //     if (residual_norm > max_residual_norm) {
-    //         max_residual_norm = residual_norm;
-    //         best_col = i;
-    //     }
-    // }
-
-    // return a.col(best_col);
-
     const size_t v_pos = b.cols();
     b.conservativeResize(Eigen::NoChange, v_pos + 1);
     const size_t cols = a.cols();
@@ -81,9 +54,8 @@ static HarmonicCycle GetCycle(MatrixF&& a, MatrixF&& b) {
 
 PersistenceRepresentatives PersistenceDiagram(const FilteredComplex& complex,
                                               const Lows& lows) {
-    const auto& simplices = complex.GetSimplices();
     PersistenceRepresentatives reps;
-    basic_types::DefaultContainer<size_t> fitting_reps;
+    basic_types::DefaultContainer<std::pair<size_t, size_t>> fitting_reps;
 
     auto add_pairs = [&](const Positions& poses) {
         for (const auto& pos : poses) {
@@ -92,21 +64,42 @@ PersistenceRepresentatives PersistenceDiagram(const FilteredComplex& complex,
             }
             Position birth = lows[pos];
             Position death = pos;
-            int dim = simplices[birth].simplex.size() - 1;
-            if (death - birth > 1 || dim == 0) {
-                if (dim == 1) {
-                    fitting_reps.emplace_back(reps.size());
-                }
-                reps.emplace_back(birth, death, dim);
+            if (death - birth > 2 && complex.GetSizeByPos(birth) == 2) {
+                reps.emplace_back(birth, death);
             }
         }
     };
 
-    add_pairs(complex.GetPosesBySize(1));
-    add_pairs(complex.GetPosesBySize(2));
+    const auto& vertices = complex.GetPosesBySize(1);
+    const auto& edges = complex.GetPosesBySize(2);
+
+    add_pairs(vertices);
+    add_pairs(edges);
     add_pairs(complex.GetPosesBySize(3));
 
-    std::sort(reps.begin(), reps.end());
+    std::sort(reps.begin(), reps.end(),
+              [](const PersistenceRepresentative& lhs,
+                 const PersistenceRepresentative& rhs) {
+                  size_t lhs_lifetime = lhs.death - lhs.birth;
+                  size_t rhs_lifetime = rhs.death - rhs.birth;
+                  return lhs_lifetime > rhs_lifetime;
+              });
+
+    reps.erase(reps.begin() + reps.size() / 10, reps.end());
+
+    const size_t n = complex.Size();
+    basic_types::DefaultContainer<size_t> edges_count(n);
+    {
+        auto it = edges.begin();
+        size_t ne = 0;
+        for (size_t i = 0; i < n; ++i) {
+            if (it != edges.end() && *it == i) {
+                ++it;
+                ++ne;
+            }
+            edges_count[i] = ne;
+        }
+    }
 
     EigenMatrix matrix = OrientedBoundaryMatrix(complex);
 
@@ -114,45 +107,86 @@ PersistenceRepresentatives PersistenceDiagram(const FilteredComplex& complex,
         return Spectra(Laplacian(matrix, complex, last_pos));
     };
 
+    auto find_vertex_index = [&vertices](Position pos) {
+        auto it = std::lower_bound(vertices.begin(), vertices.end(), pos);
+        return static_cast<size_t>(it - vertices.begin());
+    };
+
+    auto update_vertices = [&](const HarmonicCycle& edges_cycle,
+                               HarmonicCycle& vertices_cycle,
+                               const auto& edges_list) {
+        vertices_cycle.assign(vertices.size(), 0.0f);
+
+        for (size_t i = 0; i < edges_cycle.size(); ++i) {
+            const Position edge_pos = edges_list[i];
+            for (Position vertex_pos : complex.GetFacetsPosition(edge_pos)) {
+                const size_t idx = find_vertex_index(vertex_pos);
+                vertices_cycle[idx] += edges_cycle[i];
+            }
+        }
+    };
+
 #ifdef TOPA_USE_TBB
     tbb::parallel_for_each(
-        fitting_reps.begin(), fitting_reps.end(), [&](const size_t& rep_pos) {
-            auto& rep = reps[rep_pos];
+        reps.begin(), reps.end(), [&](PersistenceRepresentative& rep) {
             MatrixF ev_bp = spectra(rep.birth - 1);
             MatrixF ev_b = spectra(rep.birth);
-            MatrixF ev_dp = spectra(rep.death - 1);
-            MatrixF ev_d = spectra(rep.death);
-
+            // skip
+            if (ev_b.size() == 0) {
+                return;
+            }
             Eigen::Index rows_bp = ev_bp.rows();
             Eigen::Index rows_b = ev_b.rows();
-            if (rows_b > rows_bp) {
-                ev_bp.conservativeResize(rows_b, Eigen::NoChange);
-                ev_bp.bottomRows(rows_b - rows_bp).setZero();
-            }
+            ev_bp.conservativeResize(rows_b, Eigen::NoChange);
+            ev_bp.bottomRows(rows_b - rows_bp).setZero();
+            rep.birth_edges = GetCycle(std::move(ev_b), std::move(ev_bp));
 
+            MatrixF ev_dp = spectra(rep.death - 1);
+            // skip
+            if (ev_dp.size() == 0) {
+                rep.birth_edges.clear();
+                return;
+            }
+            MatrixF ev_d = spectra(rep.death);
             Eigen::Index rows_dp = ev_dp.rows();
             Eigen::Index rows_d = ev_d.rows();
-            if (rows_d > rows_dp) {
-                ev_dp.conservativeResize(rows_d, Eigen::NoChange);
-                ev_dp.bottomRows(rows_d - rows_dp).setZero();
-            }
+            ev_d.conservativeResize(rows_dp, Eigen::NoChange);
+            ev_d.bottomRows(rows_dp - rows_d).setZero();
+            rep.death_edges = GetCycle(std::move(ev_dp), std::move(ev_d));
 
-            rep.birth_harmonic_cycle =
-                GetCycle(std::move(ev_b), std::move(ev_bp));
-            rep.death_harmonic_cycle =
-                GetCycle(std::move(ev_d), std::move(ev_dp));
+            update_vertices(rep.birth_edges, rep.birth_vertices, edges);
+            update_vertices(rep.death_edges, rep.death_vertices, edges);
         });
 #else
     for (const auto& rep_pos : fitting_reps) {
-        auto& rep = reps[rep_pos];
+        auto& rep = reps[rep_pos.second];
         MatrixF ev_bp = spectra(rep.birth - 1);
         MatrixF ev_b = spectra(rep.birth);
-        MatrixF ev_dp = spectra(rep.death - 1);
-        MatrixF ev_d = spectra(rep.death);
-
-        ev_bp.conservativeResize(ev_bp.rows() + 1, Eigen::NoChange);
+        // skip
+        if (ev_b.size() == 0) {
+            continue;
+        }
+        Eigen::Index rows_bp = ev_bp.rows();
+        Eigen::Index rows_b = ev_b.rows();
+        if (rows_bp + 1 != rows_b || rows_b == 0) {
+            throw std::runtime_error("Invalid birth eigvectors");
+        }
+        ev_bp.conservativeResize(rows_b, Eigen::NoChange);
+        ev_bp.bottomRows(rows_b - rows_bp).setZero();
         rep.birth_harmonic_cycle = GetCycle(std::move(ev_b), std::move(ev_bp));
-        rep.death_harmonic_cycle = GetCycle(std::move(ev_d), std::move(ev_dp));
+
+        MatrixF ev_dp = spectra(rep.death - 1);
+        // skip
+        if (ev_dp.size() == 0) {
+            continue;
+        }
+        MatrixF ev_d = spectra(rep.death);
+        Eigen::Index rows_dp = ev_dp.rows();
+        Eigen::Index rows_d = ev_d.rows();
+        if (rows_dp != rows_d || rows_d == 0) {
+            throw std::runtime_error("Invalid death eigvectors");
+        }
+        rep.death_harmonic_cycle = GetCycle(std::move(ev_dp), std::move(ev_d));
     }
 #endif
 

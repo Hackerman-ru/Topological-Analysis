@@ -3,7 +3,10 @@
 
 #include <catch2/catch_test_macros.hpp>
 #include <iostream>
+#include <format>
+#include <string_view>
 
+using namespace std::literals;
 using namespace topa;
 
 void PrintPersistenceDiagram(const PersistenceRepresentatives& reps) {
@@ -14,43 +17,31 @@ void PrintPersistenceDiagram(const PersistenceRepresentatives& reps) {
     constexpr auto YELLOW = "\033[93m";
     constexpr auto RESET = "\033[0m";
 
-    constexpr int WIDTH = 80;
+    constexpr int WIDTH = 70;
     std::cout << std::string(WIDTH, '-') << '\n'
               << BLUE << " Persistence Diagram (size: " << reps.size() << ")\n"
               << RESET << std::string(WIDTH, '-') << '\n';
 
     // Header
     std::cout << CYAN
-              << "│ Dim │ Birth │ Death │  LifeTime  │   Cycles (size)   │\n"
-              << "├─────┼───────┼───────┼────────────┼───────────────────┤\n"
+              << "│  Birth  │  Death  │  Lifetime  │                        "
+                 "Components (size)                     │\n"
+              << "├─────────┼─────────┼────────────┼───────────────────────────"
+                 "───────────────────────────────────┤\n"
               << RESET;
 
     for (const auto& rep : reps) {
-        // Format cycles info
-        if (rep.dim != 1) {
-            continue;
-        }
-        std::stringstream cycles;
-        cycles << "[B:";
-        if (!rep.birth_harmonic_cycle.empty()) {
-            cycles << rep.birth_harmonic_cycle.size() << "] [D:";
-        } else {
-            cycles << "N/A] [D:";
-        }
-        if (!rep.death_harmonic_cycle.empty()) {
-            cycles << rep.death_harmonic_cycle.size() << "]";
-        } else {
-            cycles << "N/A]";
-        }
-
         // Format output
-        std::cout << "│ " << std::setw(2) << rep.dim << " "
-                  << "│ " << std::setw(4) << rep.birth << " "
-                  << "│ " << std::setw(4) << rep.death << " "
+        std::cout << "│ " << std::setw(7) << rep.birth << " "
+                  << "│ " << std::setw(7) << rep.death << " "
                   << "│ " << GREEN << std::setw(6) << (rep.death - rep.birth)
-                  << RESET << "    "
-                  << "│ " << YELLOW << std::setw(17) << std::left
-                  << cycles.str() << RESET << std::right << " │\n";
+                  << RESET << "     "
+                  << "│ " << YELLOW << "Edges[B:" << std::setw(5)
+                  << rep.birth_edges.size() << ", D:" << std::setw(5)
+                  << rep.death_edges.size() << "] "
+                  << "Vertices[B:" << std::setw(5) << rep.birth_vertices.size()
+                  << ", D:" << std::setw(5) << rep.death_vertices.size() << "]"
+                  << RESET << " │\n";
     }
 
     // Footer

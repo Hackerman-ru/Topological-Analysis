@@ -24,11 +24,6 @@ EigenMatrix OrientedBoundaryMatrix(const FilteredComplex& complex) {
         float orientation = 1.0f;
         for (size_t i = facets.size(); i > 0; --i) {
             size_t facet_pos = facets[i - 1];
-            if (facet_pos >= n) {
-                throw std::runtime_error(
-                    "Facet position " + std::to_string(facet_pos) +
-                    " exceeds matrix size " + std::to_string(n));
-            }
             triplets.emplace_back(facet_pos, pos, orientation);
             orientation = -orientation;
         }
@@ -83,17 +78,18 @@ EigenMatrix Laplacian(const EigenMatrix& matrix, const FilteredComplex& complex,
 
 MatrixF Spectra(const EigenMatrix& matrix) {
     const int n = matrix.rows();
-    const int nev = std::min(5, n - 1);
-    const int ncv = std::min(2 * nev + 5, n);
+    const int nev = std::min(1, n - 1);
+    const int ncv = std::min(2 * nev + 1, n);
 
     using OpType = Spectra::SparseSymShiftSolve<float>;
     OpType op(matrix);
 
-    Spectra::SymEigsShiftSolver<OpType> eigs(op, nev, ncv, 1e-5f);
+    Spectra::SymEigsShiftSolver<OpType> eigs(op, nev, ncv, 0.0f);
     eigs.init();
-    eigs.compute(Spectra::SortRule::LargestMagn, 2000, 1e-7f);
+    size_t en = eigs.compute(Spectra::SortRule::LargestMagn, 2000, 1e-7f,
+                             Spectra::SortRule::SmallestMagn);
 
-    if (eigs.info() != Spectra::CompInfo::Successful) {
+    if (en == 0 || eigs.info() != Spectra::CompInfo::Successful) {
         return {};
     }
 
@@ -101,9 +97,8 @@ MatrixF Spectra(const EigenMatrix& matrix) {
     MatrixF eigenvectors = eigs.eigenvectors();
 
     std::vector<size_t> zero_indices;
-    size_t size = eigenvalues.size();
-    for (size_t i = 0; i < size; ++i) {
-        if (std::abs(eigenvalues[i]) < 1e-6) {
+    for (size_t i = 0; i < en; ++i) {
+        if (std::abs(eigenvalues[i]) < 1e-6f) {
             zero_indices.push_back(i);
         }
     }

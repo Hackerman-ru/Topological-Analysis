@@ -11,25 +11,15 @@ using HarmonicCycle = basic_types::DefaultContainer<float>;
 
 struct PersistenceRepresentative {
     Position birth;
+    HarmonicCycle birth_edges;
+    HarmonicCycle birth_vertices;
     Position death;
-    int dim;
-    HarmonicCycle birth_harmonic_cycle;
-    HarmonicCycle death_harmonic_cycle;
+    HarmonicCycle death_edges;
+    HarmonicCycle death_vertices;
 
-    PersistenceRepresentative(Position b, Position d, int di)
+    PersistenceRepresentative(Position b, Position d)
         : birth(b),
-          death(d),
-          dim(di) {};
-
-    bool operator<(const PersistenceRepresentative& other) const {
-        if (dim != other.dim) {
-            return dim < other.dim;
-        }
-        if (birth != other.birth) {
-            return birth < other.birth;
-        }
-        return false;
-    }
+          death(d) {};
 };
 
 using PersistenceRepresentatives =
