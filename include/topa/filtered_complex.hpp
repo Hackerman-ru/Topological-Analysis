@@ -27,8 +27,6 @@ class FilteredComplex {
    private:
     FilteredComplex(WSimplices wsimplices, SimplexTree tree);
 
-    void CountDimPoses();
-
    private:
     DimPoses dim_poses_ = DimPoses(3);
     WSimplices wsimplices_;

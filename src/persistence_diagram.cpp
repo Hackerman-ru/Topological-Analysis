@@ -64,6 +64,9 @@ PersistenceRepresentatives PersistenceDiagram(const FilteredComplex& complex,
             }
             Position birth = lows[pos];
             Position death = pos;
+            if (death < birth) {
+                continue;
+            }
             if (death - birth > 2 && complex.GetSizeByPos(birth) == 2) {
                 reps.emplace_back(birth, death);
             }
@@ -155,7 +158,9 @@ PersistenceRepresentatives PersistenceDiagram(const FilteredComplex& complex,
             rep.death_edges = GetCycle(std::move(ev_dp), std::move(ev_d));
 
             update_vertices(rep.birth_edges, rep.birth_vertices, edges);
+            rep.birth_edges.resize(edges.size());
             update_vertices(rep.death_edges, rep.death_vertices, edges);
+            rep.death_edges.resize(edges.size());
         });
 #else
     for (const auto& rep_pos : fitting_reps) {
