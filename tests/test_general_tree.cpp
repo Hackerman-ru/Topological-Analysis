@@ -1,14 +1,16 @@
-#include "simplex_tree.hpp"
+#include "common/complex/simplex_tree/general_tree.hpp"
+#include "common/type/simplex.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_all.hpp>
 #include <vector>
 #include <algorithm>
 
-using namespace topa;
+using namespace topa::common;
+using namespace topa::common::complex;
 
 TEST_CASE("SimplexTree Add and Has") {
-    SimplexTree st(10);
+    GeneralTree st(10);
 
     st.Add({0}, 0);
     st.Add({1, 2}, 1);
@@ -17,17 +19,17 @@ TEST_CASE("SimplexTree Add and Has") {
     REQUIRE(st.Has({0}) == true);
     REQUIRE(st.Has({1, 2}) == true);
     REQUIRE(st.Has({0, 1, 2}) == true);
-    REQUIRE(st.GetPosition({0}) == 0);
-    REQUIRE(st.GetPosition({1, 2}) == 1);
-    REQUIRE(st.GetPosition({0, 1, 2}) == 2);
+    REQUIRE(st.GetPos({0}) == 0);
+    REQUIRE(st.GetPos({1, 2}) == 1);
+    REQUIRE(st.GetPos({0, 1, 2}) == 2);
 
     REQUIRE(st.Has({3}) == false);
     REQUIRE(st.Has({0, 2}) == false);
-    REQUIRE(st.GetPosition({0, 2}) == kNonePos);
+    REQUIRE(st.GetPos({0, 2}) == kUnknownPos);
 }
 
-TEST_CASE("GetFacets: Basic Functionality") {
-    SimplexTree st(10);
+TEST_CASE("GetFacetsPos: Basic Functionality") {
+    GeneralTree st(10);
     st.Add({0, 1, 2}, 100);
     st.Add({0, 1}, 10);
     st.Add({0, 2}, 20);
@@ -37,7 +39,7 @@ TEST_CASE("GetFacets: Basic Functionality") {
     st.Add({2}, 3);
 
     SECTION("Facets of 3-simplex") {
-        auto facets = st.GetFacets({0, 1, 2});
+        auto facets = st.GetFacetsPos({0, 1, 2});
         REQUIRE(facets.size() == 3);
         REQUIRE(std::find(facets.begin(), facets.end(), 10) != facets.end());
         REQUIRE(std::find(facets.begin(), facets.end(), 20) != facets.end());
@@ -45,25 +47,25 @@ TEST_CASE("GetFacets: Basic Functionality") {
     }
 
     SECTION("Facets of 1-simplex (edge)") {
-        auto facets = st.GetFacets({0, 1});
+        auto facets = st.GetFacetsPos({0, 1});
         REQUIRE(facets.size() == 2);
         REQUIRE(std::find(facets.begin(), facets.end(), 1) != facets.end());
         REQUIRE(std::find(facets.begin(), facets.end(), 2) != facets.end());
     }
 
     SECTION("Facets of 0-simplex (vertex)") {
-        auto facets = st.GetFacets({0});
+        auto facets = st.GetFacetsPos({0});
         REQUIRE(facets.empty());
     }
 
     SECTION("Non-existent simplex") {
-        auto facets = st.GetFacets({3, 4});
+        auto facets = st.GetFacetsPos({3, 4});
         REQUIRE(facets.empty());
     }
 }
 
-TEST_CASE("GetFacets: Exactly One Vertex Less") {
-    SimplexTree st(10);
+TEST_CASE("GetFacetsPos: Exactly One Vertex Less") {
+    GeneralTree st(10);
 
     st.Add({0, 1, 2}, 100);
 
@@ -72,7 +74,7 @@ TEST_CASE("GetFacets: Exactly One Vertex Less") {
     st.Add({1, 2}, 30);
 
     SECTION("Facets of 3-vertex simplex") {
-        auto facets = st.GetFacets({0, 1, 2});
+        auto facets = st.GetFacetsPos({0, 1, 2});
         REQUIRE(facets.size() == 3);
         REQUIRE(std::find(facets.begin(), facets.end(), 10) != facets.end());
         REQUIRE(std::find(facets.begin(), facets.end(), 20) != facets.end());
@@ -82,15 +84,15 @@ TEST_CASE("GetFacets: Exactly One Vertex Less") {
     SECTION("Facets of 2-vertex simplex (edge)") {
         st.Add({0}, 1);
         st.Add({1}, 2);
-        auto facets = st.GetFacets({0, 1});
+        auto facets = st.GetFacetsPos({0, 1});
         REQUIRE(facets.size() == 2);
         REQUIRE(std::find(facets.begin(), facets.end(), 1) != facets.end());
         REQUIRE(std::find(facets.begin(), facets.end(), 2) != facets.end());
     }
 }
 
-TEST_CASE("GetCofacets: Exactly One Vertex More") {
-    SimplexTree st(10);
+TEST_CASE("GetCofacetsPos: Exactly One Vertex More") {
+    GeneralTree st(10);
 
     st.Add({0, 1}, 10);
 
@@ -98,7 +100,7 @@ TEST_CASE("GetCofacets: Exactly One Vertex More") {
     st.Add({0, 1, 3}, 101);
 
     SECTION("Cofacets of 2-vertex simplex") {
-        auto cofacets = st.GetCofacets({0, 1});
+        auto cofacets = st.GetCofacetsPos({0, 1});
         REQUIRE(cofacets.size() == 2);
         REQUIRE(std::find(cofacets.begin(), cofacets.end(), 100) !=
                 cofacets.end());
@@ -107,53 +109,53 @@ TEST_CASE("GetCofacets: Exactly One Vertex More") {
     }
 
     SECTION("Cofacets of 3-vertex simplex (no cofacets)") {
-        auto cofacets = st.GetCofacets({0, 1, 2});
+        auto cofacets = st.GetCofacetsPos({0, 1, 2});
         REQUIRE(cofacets.empty());
     }
 }
 
-TEST_CASE("GetFacets/Cofacets: After Move Semantics") {
-    SimplexTree st1(10);
+TEST_CASE("GetFacetsPos/Cofacets: After Move Semantics") {
+    GeneralTree st1(10);
     st1.Add({0, 1, 2}, 100);
     st1.Add({0, 1}, 10);
 
-    SimplexTree st2 = std::move(st1);
-    REQUIRE(st2.GetFacets({0, 1, 2}).size() == 1);
-    REQUIRE(st2.GetCofacets({0, 1}).size() == 1);
+    GeneralTree st2 = std::move(st1);
+    REQUIRE(st2.GetFacetsPos({0, 1, 2}).size() == 1);
+    REQUIRE(st2.GetCofacetsPos({0, 1}).size() == 1);
 }
 
 TEST_CASE("SimplexTree Move Semantics") {
-    SimplexTree st1(10);
+    GeneralTree st1(10);
     st1.Add({0}, 0);
     st1.Add({0, 1}, 1);
 
-    SimplexTree st2 = std::move(st1);
+    GeneralTree st2 = std::move(st1);
     REQUIRE(st2.Has({0}));
     REQUIRE(st2.Has({0, 1}));
 
-    SimplexTree st3(10);
+    GeneralTree st3(10);
     st3 = std::move(st2);
     REQUIRE(st3.Has({0}));
     REQUIRE(st3.Has({0, 1}));
 }
 
 TEST_CASE("SimplexTree Cofacets With DifferentBranches") {
-    SimplexTree st(10);
+    GeneralTree st(10);
     st.Add({1, 2}, 0);
     st.Add({0, 1}, 2);
     st.Add({0, 1, 2}, 1);
 
-    auto cofacets = st.GetCofacets({1, 2});
+    auto cofacets = st.GetCofacetsPos({1, 2});
     REQUIRE(cofacets.size() == 1);
     REQUIRE(cofacets[0] == 1);
 
-    cofacets = st.GetCofacets({0, 1});
+    cofacets = st.GetCofacetsPos({0, 1});
     REQUIRE(cofacets.size() == 1);
     REQUIRE(cofacets[0] == 1);
 }
 
 TEST_CASE("Stress Test: Large SimplexTree") {
-    SimplexTree st(1000);
+    GeneralTree st(1000);
     constexpr size_t kNumSimplices = 1000;
 
     for (size_t i = 0; i < kNumSimplices; ++i) {

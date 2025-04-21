@@ -1,14 +1,14 @@
 #pragma once
 
 #include "common/type/position.hpp"
+#include "fast_column.hpp"
 
-#include <ranges>
 #include <vector>
 #include <cstdint>
 
 namespace topa::common::reduction {
 
-class BitTreeColumn {
+class BitTreeColumn : public FastColumn<BitTreeColumn> {
     using Block = uint64_t;
     using Data = std::vector<Block>;
 
@@ -16,14 +16,31 @@ class BitTreeColumn {
     explicit BitTreeColumn(size_t columns_number);
 
     Position GetMaxPos() const;
-    bool Empty() const;
+    bool IsEmpty() const;
 
-    template <std::ranges::input_range R>
-    BitTreeColumn& Add(R&& range) {
+    std::vector<Position> PopAll();
+
+    BitTreeColumn& operator+=(const BitTreeColumn& other);
+    BitTreeColumn& operator+=(BitTreeColumn&& other);
+    BitTreeColumn& operator+=(std::initializer_list<Position> positions);
+
+    friend BitTreeColumn operator+(const BitTreeColumn& lhs,
+                                   const BitTreeColumn& rhs);
+    friend BitTreeColumn operator+(BitTreeColumn&& lhs,
+                                   const BitTreeColumn& rhs);
+    friend BitTreeColumn operator+(const BitTreeColumn& lhs,
+                                   BitTreeColumn&& rhs);
+    friend BitTreeColumn operator+(BitTreeColumn&& lhs, BitTreeColumn&& rhs);
+
+    template <PositionRange R>
+    void Add(R&& range) {
         for (const auto& pos : range) {
             Xor(pos);
         }
-        return *this;
+    }
+
+    void Add(std::initializer_list<Position> positions) {
+        Add(std::views::all(positions));
     }
 
     Position PopMaxPos();

@@ -10,8 +10,8 @@ BitTreeColumn::BitTreeColumn(size_t columns_number) {
 }
 
 Position BitTreeColumn::GetMaxPos() const {
-    if (Empty()) {
-        return kUnknown;
+    if (IsEmpty()) {
+        return kUnknownPos;
     }
 
     size_t node = 0;
@@ -27,19 +27,77 @@ Position BitTreeColumn::GetMaxPos() const {
     return ((node - offset_) << kBlockShift) + index;
 }
 
-bool BitTreeColumn::Empty() const {
+bool BitTreeColumn::IsEmpty() const {
     return data_[0] == 0;
+}
+
+std::vector<Position> BitTreeColumn::PopAll() {
+    std::vector<Position> positions;
+    Position max_pos = GetMaxPos();
+    while (max_pos != kUnknownPos) {
+        positions.emplace_back(max_pos);
+        Xor(max_pos);
+        max_pos = GetMaxPos();
+    }
+    std::reverse(positions.begin(), positions.end());
+    return positions;
+}
+
+BitTreeColumn& BitTreeColumn::operator+=(BitTreeColumn&& other) {
+    for (const auto& pos : other.PopAll()) {
+        Xor(pos);
+    }
+    return *this;
+}
+
+BitTreeColumn& BitTreeColumn::operator+=(const BitTreeColumn& other) {
+    BitTreeColumn copy(other);
+    for (const auto& pos : copy.PopAll()) {
+        Xor(pos);
+    }
+    return *this;
+}
+
+BitTreeColumn& BitTreeColumn::operator+=(
+    std::initializer_list<Position> positions) {
+    for (const auto& pos : positions) {
+        Xor(pos);
+    }
+    return *this;
+}
+
+BitTreeColumn operator+(const BitTreeColumn& lhs, const BitTreeColumn& rhs) {
+    BitTreeColumn result = lhs;
+    result += rhs;
+    return result;
+}
+
+BitTreeColumn operator+(BitTreeColumn&& lhs, const BitTreeColumn& rhs) {
+    lhs += rhs;
+    return lhs;
+}
+
+BitTreeColumn operator+(const BitTreeColumn& lhs, BitTreeColumn&& rhs) {
+    rhs += lhs;
+    return rhs;
+}
+
+BitTreeColumn operator+(BitTreeColumn&& lhs, BitTreeColumn&& rhs) {
+    lhs += std::move(rhs);
+    return lhs;
 }
 
 Position BitTreeColumn::PopMaxPos() {
     Position max_pos = GetMaxPos();
-    Xor(max_pos);
+    if (max_pos != kUnknownPos) {
+        Xor(max_pos);
+    }
     return max_pos;
 }
 
 void BitTreeColumn::Clear() {
     Position max_pos = GetMaxPos();
-    while (max_pos != kUnknown) {
+    while (max_pos != kUnknownPos) {
         Xor(max_pos);
         max_pos = GetMaxPos();
     }
