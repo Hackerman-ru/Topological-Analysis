@@ -7,7 +7,7 @@
 #include <limits>
 #include <cassert>
 
-namespace topa::common {
+namespace topa {
 
 using Simplex = std::vector<VertexId>;
 
@@ -55,9 +55,21 @@ class WSimplex {
         return simplex_ < other.simplex_;
     }
 
+    bool operator>(const WSimplex& other) const {
+        if (weight_ != other.weight_) {
+            return weight_ > other.weight_;
+        }
+
+        if (simplex_.size() != other.simplex_.size()) {
+            return simplex_.size() > other.simplex_.size();
+        }
+
+        return simplex_ > other.simplex_;
+    }
+
    private:
     Simplex simplex_;
     Weight weight_;
 };
 
-}  // namespace topa::common
+}  // namespace topa

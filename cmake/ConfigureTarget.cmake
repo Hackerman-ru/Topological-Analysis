@@ -43,6 +43,7 @@ function(configure_tests MAIN_TARGET)
     FetchContent_MakeAvailable(Catch2)
 
     # Test main
+    enable_testing()
     add_library(catch_main tools/catch_main.cpp)
     target_link_libraries(catch_main PUBLIC Catch2::Catch2)
 

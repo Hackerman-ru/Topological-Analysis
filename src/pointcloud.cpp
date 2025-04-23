@@ -1,26 +1,25 @@
-#include "pointcloud.hpp"
+#include "common/pointcloud.hpp"
 
-#include <cmath>
 #include <fstream>
 #include <sstream>
 
-namespace topa {
+namespace topa::common {
 
-Pointcloud::Pointcloud(size_t dim)
-    : dim_(dim),
-      points_(dim) {
+Pointcloud::Pointcloud(size_t point_dim)
+    : dim_(point_dim),
+      points_(point_dim) {
 }
 
 std::optional<Pointcloud> Pointcloud::Load(std::string file_path) {
     std::optional<Pointcloud> pointcloud;
     std::ifstream file(file_path);
     if (!file) {
-        return pointcloud;
+        return std::nullopt;
     }
     std::string line;
     std::getline(file, line);
     if (line != "OFF") {
-        return pointcloud;
+        return std::nullopt;
     }
     std::getline(file, line);  // Skipping number of lines
 
@@ -32,8 +31,8 @@ std::optional<Pointcloud> Pointcloud::Load(std::string file_path) {
         while (ss >> value) {
             point.emplace_back(std::move(value));
         }
-        if (!pointcloud.has_value()) {
-            pointcloud = Pointcloud(point.size());
+        if (!pointcloud) {
+            pointcloud.emplace(point.size());
         }
         (*pointcloud).points_.push_back(std::move(point));
     }
@@ -53,26 +52,18 @@ const Pointcloud::Points& Pointcloud::GetPoints() const {
     return points_;
 }
 
-Pointcloud::CoordinateType Pointcloud::EuclideanDistance(size_t i,
-                                                         size_t j) const {
-    assert(i < points_.size());
-    assert(j < points_.size());
+Pointcloud::Distance Pointcloud::GetDistance(size_t i, size_t j) const {
     CoordinateType sum = 0;
+    CoordinateType c = 0;
     for (size_t k = 0; k < dim_; ++k) {
         CoordinateType diff = points_[i][k] - points_[j][k];
-        sum += diff * diff;
-    }
-    return std::sqrt(sum);
-}
-
-Pointcloud::CoordinateType Pointcloud::SquaredEucledianDistance(
-    size_t i, size_t j) const {
-    CoordinateType sum = 0;
-    for (size_t k = 0; k < dim_; ++k) {
-        CoordinateType diff = points_[i][k] - points_[j][k];
-        sum += diff * diff;
+        CoordinateType y = (diff * diff) - c;
+        CoordinateType temp = sum + y;
+        CoordinateType compensation = (temp - sum) - y;
+        c = -compensation;
+        sum = temp;
     }
     return sum;
 }
 
-}  // namespace topa
+}  // namespace topa::common

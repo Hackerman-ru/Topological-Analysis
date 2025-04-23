@@ -1,9 +1,10 @@
-#include "pointcloud.hpp"
+#include "common/pointcloud.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 using namespace topa;
+using namespace topa::common;
 using namespace Catch::Matchers;
 
 TEST_CASE("Pointcloud basic functionality", "[Pointcloud]") {
@@ -40,9 +41,7 @@ TEST_CASE("Pointcloud basic functionality", "[Pointcloud]") {
         cloud.Add({0.0, 0.0, 0.0});
         cloud.Add({3.0, 4.0, 0.0});
 
-        REQUIRE_THAT(cloud.SquaredEucledianDistance(0, 1),
-                     WithinAbs(25.0, 1e-6));
-        REQUIRE_THAT(cloud.EuclideanDistance(0, 1), WithinAbs(5.0, 1e-6));
+        REQUIRE_THAT(cloud.GetDistance(0, 1), WithinAbs(25.0, 1e-6));
     }
 }
 
@@ -85,7 +84,7 @@ TEST_CASE("Stress tests for Pointcloud", "[Pointcloud][stress]") {
 
         for (size_t i = 0; i < 1000; ++i) {
             for (size_t j = i + 1; j < 1000; ++j) {
-                auto dist = cloud.SquaredEucledianDistance(i, j);
+                auto dist = cloud.GetDistance(i, j);
                 REQUIRE(dist >= 0);
             }
         }

@@ -3,14 +3,28 @@
 #include <limits>
 #include <algorithm>
 
-namespace topa::common {
+namespace topa {
 
 class Weight {
    public:
     using Type = float;
 
-    explicit Weight(Type value)
+    Weight() = default;
+
+    // NOLINTNEXTLINE
+    Weight(Type value)
         : value_(value) {
+    }
+
+    Weight operator+(const Weight& other) const {
+        Weight result = *this;
+        result += other;
+        return result;
+    }
+
+    Weight& operator+=(const Weight& other) {
+        value_ += other.value_;
+        return *this;
     }
 
     bool operator==(const Weight& other) const {
@@ -62,4 +76,6 @@ class Weight {
     Type value_;
 };
 
-}  // namespace topa::common
+static_assert(sizeof(Weight) == sizeof(Weight::Type));
+
+}  // namespace topa

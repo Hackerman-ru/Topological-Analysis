@@ -9,24 +9,37 @@ namespace topa::fast {
 
 // SimplexTree, which assumes that the full 2-skeleton
 // was added before any const methods
-class FullTree final : public models::SimplexTree<FullTree> {
+class FullTreeOpt final : public models::SimplexTree<FullTreeOpt> {
    public:
-    explicit FullTree(size_t n_vertices);
+    explicit FullTreeOpt(size_t n_vertices);
 
     void Add(VertexRange auto&& simplex, Position pos) {
         assert(std::is_sorted(simplex.begin(), simplex.end()));
-        std::vector<VertexId> s(simplex.begin(), simplex.end());
-        switch (s.size()) {
-            case 1:
-                VertexPos(s[0]) = pos;
-                break;
-            case 2:
-                EdgePos(s[0], s[1]) = pos;
-                break;
-            case 3:
-                TrianglePos(s[0], s[1], s[2]) = pos;
-                break;
+        auto it = simplex.begin();
+        auto end = simplex.end();
+        if (it == end) {
+            return;
         }
+
+        VertexId v0 = *it++;
+        if (it == end) {
+            VertexPos(v0) = pos;
+            return;
+        }
+
+        VertexId v1 = *it++;
+        if (it == end) {
+            EdgePos(v0, v1) = pos;
+            return;
+        }
+
+        VertexId v2 = *it++;
+        if (it == end) {
+            TrianglePos(v0, v1, v2) = pos;
+            return;
+        }
+
+        assert(false && "Simplex size >3");
     }
 
     void Add(std::initializer_list<VertexId> simplex, Position pos) {
@@ -35,7 +48,14 @@ class FullTree final : public models::SimplexTree<FullTree> {
 
     bool Has(VertexRange auto&& simplex) const {
         assert(std::is_sorted(simplex.begin(), simplex.end()));
-        return simplex.size() <= 3;
+        auto it = simplex.begin();
+        auto end = simplex.end();
+        size_t count = 0;
+        while (it != end && count <= 3) {
+            ++it;
+            ++count;
+        }
+        return count <= 3;
     }
 
     bool Has(std::initializer_list<VertexId> simplex) const {
@@ -44,17 +64,28 @@ class FullTree final : public models::SimplexTree<FullTree> {
 
     Position GetPos(VertexRange auto&& simplex) const {
         assert(std::is_sorted(simplex.begin(), simplex.end()));
-        std::vector<VertexId> s(simplex.begin(), simplex.end());
-        switch (s.size()) {
-            case 1:
-                return VertexPos(s[0]);
-            case 2:
-                return EdgePos(s[0], s[1]);
-            case 3:
-                return TrianglePos(s[0], s[1], s[2]);
-            default:
-                return kUnknownPos;
+        auto it = simplex.begin();
+        auto end = simplex.end();
+        if (it == end) {
+            return kUnknownPos;
         }
+
+        VertexId v0 = *it++;
+        if (it == end) {
+            return VertexPos(v0);
+        }
+
+        VertexId v1 = *it++;
+        if (it == end) {
+            return EdgePos(v0, v1);
+        }
+
+        VertexId v2 = *it++;
+        if (it == end) {
+            return TrianglePos(v0, v1, v2);
+        }
+
+        return kUnknownPos;
     }
 
     Position GetPos(std::initializer_list<VertexId> simplex) const {
@@ -82,6 +113,37 @@ class FullTree final : public models::SimplexTree<FullTree> {
         }
 
         return facets;
+        // Positions facets;
+
+        // auto it = simplex.begin();
+        // auto end = simplex.end();
+        // if (it == end) {
+        //     return facets;
+        // }
+
+        // VertexId v0 = *it++;
+        // if (it == end) {
+        //     return facets;
+        // }
+
+        // VertexId v1 = *it++;
+        // if (it == end) {
+        //     facets.emplace_back(VertexPos(v0));
+        //     facets.emplace_back(VertexPos(v1));
+        //     return facets;
+        // }
+
+        // VertexId v2 = *it++;
+        // if (it == end) {
+        //     facets.reserve(3);
+        //     facets.emplace_back(EdgePos(v0, v1));
+        //     facets.emplace_back(EdgePos(v0, v2));
+        //     facets.emplace_back(EdgePos(v1, v2));
+        //     return facets;
+        // }
+
+        // assert(false && "Simplex size >3");
+        // return facets;
     }
 
     Positions GetFacetsPos(std::initializer_list<VertexId> simplex) const {
@@ -123,6 +185,47 @@ class FullTree final : public models::SimplexTree<FullTree> {
         }
 
         return cofacets;
+        // Positions cofacets;
+
+        // auto it = simplex.begin();
+        // auto end = simplex.end();
+        // if (it == end) {
+        //     return cofacets;
+        // }
+
+        // VertexId u = *it++;
+        // if (it == end) {
+        //     for (VertexId v = 0; v < n_; ++v) {
+        //         if (v < u) {
+        //             cofacets.emplace_back(EdgePos(v, u));
+        //         } else if (v > u) {
+        //             cofacets.emplace_back(EdgePos(u, v));
+        //         }
+        //     }
+        //     return cofacets;
+        // }
+
+        // VertexId v = *it++;
+        // if (it == end) {
+        //     for (VertexId w = 0; w < n_; ++w) {
+        //         if (w < u) {
+        //             cofacets.emplace_back(TrianglePos(w, u, v));
+        //         } else if (w > u && w < v) {
+        //             cofacets.emplace_back(TrianglePos(u, w, v));
+        //         } else if (w > v) {
+        //             cofacets.emplace_back(TrianglePos(u, v, w));
+        //         }
+        //     }
+        //     return cofacets;
+        // }
+
+        // it++;
+        // if (it == end) {
+        //     return cofacets;
+        // }
+
+        // assert(false && "Simplex size >3");
+        // return cofacets;
     }
 
     Positions GetCofacetsPos(std::initializer_list<VertexId> simplex) const {

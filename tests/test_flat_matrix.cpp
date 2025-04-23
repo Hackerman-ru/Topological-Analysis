@@ -1,4 +1,4 @@
-#include "detail/flat_matrix.hpp"
+#include "common/detail/flat_matrix.hpp"
 
 #include <algorithm>
 #include <catch2/catch_test_macros.hpp>
