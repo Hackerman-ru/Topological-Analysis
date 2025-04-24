@@ -21,43 +21,44 @@ using namespace topa::common;
 namespace {
 
 template <typename Complex>
-Complex GenerateRandomComplex(VertexId n_vertices, Weight max_radius) {
-    std::vector<WSimplex> wsimplices;
+Complex GenerateRandomComplex(VertexId n_vertices, FiltrationValue max_radius) {
+    std::vector<FSimplex> fsimplices;
 
     std::mt19937 gen(42);
     std::uniform_real_distribution<float> dist_randomizer(0.0f, 10.0f);
 
-    detail::FlatMatrix<Weight> dist(n_vertices, n_vertices);
+    detail::FlatMatrix<FiltrationValue> dist(n_vertices, n_vertices);
     for (VertexId i = 0; i < n_vertices; ++i) {
         for (VertexId j = i + 1; j < n_vertices; ++j) {
-            dist[i][j] = static_cast<Weight>(dist_randomizer(gen));
+            dist[i][j] = static_cast<FiltrationValue>(dist_randomizer(gen));
         }
     }
 
     const std::size_t total =
         n_vertices + n_vertices * (n_vertices - 1) / 2 +
         n_vertices * (n_vertices - 1) * (n_vertices - 2) / 6;
-    wsimplices.reserve(total / 2);
+    fsimplices.reserve(total / 2);
 
     for (VertexId i = 0; i < n_vertices; ++i) {
-        wsimplices.emplace_back(Simplex{i}, 0.0f);
+        fsimplices.emplace_back(Simplex{i}, 0.0f);
         for (VertexId j = i + 1; j < n_vertices; ++j) {
-            const Weight d_ij = dist[i][j];
+            const FiltrationValue d_ij = dist[i][j];
             if (d_ij > max_radius) {
                 continue;
             }
-            wsimplices.emplace_back(Simplex{i, j}, d_ij);
+            fsimplices.emplace_back(Simplex{i, j}, d_ij);
             for (VertexId k = j + 1; k < n_vertices; ++k) {
-                const Weight max_d = std::max({d_ij, dist[i][k], dist[j][k]});
+                const FiltrationValue max_d =
+                    std::max({d_ij, dist[i][k], dist[j][k]});
                 if (max_d <= max_radius) {
-                    wsimplices.emplace_back(Simplex{i, j, k}, max_d);
+                    fsimplices.emplace_back(Simplex{i, j, k}, max_d);
                 }
             }
         }
     }
 
-    std::sort(wsimplices.begin(), wsimplices.end());
-    return Complex(std::move(wsimplices), n_vertices);
+    std::sort(fsimplices.begin(), fsimplices.end());
+    return Complex(std::move(fsimplices), n_vertices);
 }
 
 #define TEST(name) \

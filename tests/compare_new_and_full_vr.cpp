@@ -67,7 +67,7 @@ TEST_CASE("Correctness of NewVR and FullVR") {
             max_distance = std::max(max_distance, cloud.GetDistance(i, j));
         }
     }
-    const Weight max_radius = max_distance + 0.1f;
+    const FiltrationValue max_radius = max_distance + 0.1f;
     const size_t max_dim = 2;
 
     topa::common::NewVR new_vr(max_radius, max_dim);
@@ -91,14 +91,16 @@ TEST("Benchmark VR Implementations") {
     }
 
     // Определение max_radius для полного графа
-    Weight max_distance = 0.0f;
+    FiltrationValue max_distance = 0.0f;
     for (size_t i = 0; i < cloud.Size(); ++i) {
         for (size_t j = i + 1; j < cloud.Size(); ++j) {
-            max_distance = std::max(
-                max_distance, static_cast<Weight>(cloud.GetDistance(i, j)));
+            max_distance =
+                std::max(max_distance,
+                         static_cast<FiltrationValue>(cloud.GetDistance(i, j)));
         }
     }
-    const Weight max_radius = max_distance + static_cast<Weight>(0.1f);
+    const FiltrationValue max_radius =
+        max_distance + static_cast<FiltrationValue>(0.1f);
     const size_t max_dim = 2;
 
     BENCHMARK("NewVR") {

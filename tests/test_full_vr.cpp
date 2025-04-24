@@ -75,7 +75,7 @@ TEST_CASE("FullVR generates correct simplices count", "[FullVR]") {
     }
 }
 
-TEST_CASE("FullVR computes correct weights", "[FullVR]") {
+TEST_CASE("FullVR computes correct filtration_values", "[FullVR]") {
     FullVR vr;
     MockCloud cloud;
 
@@ -86,7 +86,7 @@ TEST_CASE("FullVR computes correct weights", "[FullVR]") {
 
     // Проверяем вес треугольника (0,1,2)
     const auto& triangle = simplices.back();
-    REQUIRE(triangle.GetWeight() == 3.0f);
+    REQUIRE(triangle.GetFiltrationValue() == 3.0f);
 }
 
 TEST_CASE("FullVR sorts simplices correctly", "[FullVR]") {
@@ -99,15 +99,15 @@ TEST_CASE("FullVR sorts simplices correctly", "[FullVR]") {
     auto simplices = vr.Filter(cloud);
 
     // Ожидаемый порядок: вершины (вес 0), ребра (1, 2, 3), треугольник (3)
-    REQUIRE(simplices[0].GetWeight() == 0.0f);
-    REQUIRE(simplices[1].GetWeight() == 0.0f);
-    REQUIRE(simplices[2].GetWeight() == 0.0f);
+    REQUIRE(simplices[0].GetFiltrationValue() == 0.0f);
+    REQUIRE(simplices[1].GetFiltrationValue() == 0.0f);
+    REQUIRE(simplices[2].GetFiltrationValue() == 0.0f);
 
-    REQUIRE(simplices[3].GetWeight() == 1.0f);
-    REQUIRE(simplices[4].GetWeight() == 2.0f);
-    REQUIRE(simplices[5].GetWeight() == 3.0f);
+    REQUIRE(simplices[3].GetFiltrationValue() == 1.0f);
+    REQUIRE(simplices[4].GetFiltrationValue() == 2.0f);
+    REQUIRE(simplices[5].GetFiltrationValue() == 3.0f);
 
-    REQUIRE(simplices[6].GetWeight() == 3.0f);
+    REQUIRE(simplices[6].GetFiltrationValue() == 3.0f);
     REQUIRE(simplices[6].Dim() == 2);
 }
 

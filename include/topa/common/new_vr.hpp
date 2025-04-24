@@ -8,17 +8,17 @@
 namespace topa::common {
 
 class NewVR final : public models::Filtration<NewVR> {
-    Weight max_radius_;
+    FiltrationValue max_radius_;
     size_t max_dim_;
 
    public:
-    NewVR(Weight max_radius, size_t max_dim)
+    NewVR(FiltrationValue max_radius, size_t max_dim)
         : max_radius_(max_radius),
           max_dim_(max_dim) {
     }
 
     template <typename... CloudImpl>
-    WSimplices Filter(const models::Pointcloud<CloudImpl...>& cloud) const {
+    FSimplices Filter(const models::Pointcloud<CloudImpl...>& cloud) const {
         return Wrapper<CloudImpl...>::Filter(cloud, max_radius_, max_dim_);
     }
 
@@ -29,31 +29,31 @@ class NewVR final : public models::Filtration<NewVR> {
         using Graph = std::unordered_map<VertexId, std::vector<VertexId>>;
 
        public:
-        static WSimplices Filter(const Cloud& cloud, Weight max_radius,
+        static FSimplices Filter(const Cloud& cloud, FiltrationValue max_radius,
                                  size_t max_dim) {
-            WSimplices wsimplices;
+            FSimplices fsimplices;
             const auto cloud_size = static_cast<VertexId>(cloud.Size());
             const auto graph = BuildAdjacencyGraph(cloud, max_radius);
 
             for (VertexId u = 0; u < cloud_size; ++u) {
                 Simplex tau = {u};
                 auto n = UpperNeighbors(graph, u);
-                NewAddCofaces(cloud, graph, max_dim, tau, n, 0.0f, wsimplices);
+                NewAddCofaces(cloud, graph, max_dim, tau, n, 0.0f, fsimplices);
             }
 
-            std::ranges::sort(wsimplices);
-            return wsimplices;
+            std::ranges::sort(fsimplices);
+            return fsimplices;
         }
 
        private:
         static Graph BuildAdjacencyGraph(const Cloud& cloud,
-                                         Weight max_radius) {
+                                         FiltrationValue max_radius) {
             Graph graph;
             const auto cloud_size = static_cast<VertexId>(cloud.Size());
 
             for (VertexId u = 0; u < cloud_size; ++u) {
                 for (VertexId v = u + 1; v < cloud_size; ++v) {
-                    if (static_cast<Weight>(cloud.GetDistance(u, v)) <=
+                    if (static_cast<FiltrationValue>(cloud.GetDistance(u, v)) <=
                         max_radius) {
                         graph[u].emplace_back(v);
                     }
@@ -81,9 +81,9 @@ class NewVR final : public models::Filtration<NewVR> {
         static void NewAddCofaces(const Cloud& cloud, const Graph& graph,
                                   size_t max_dim, const Simplex& tau,
                                   const std::vector<VertexId>& n,
-                                  Weight current_weight,
-                                  WSimplices& wsimplices) {
-            wsimplices.emplace_back(tau, current_weight);
+                                  FiltrationValue current_filtration_value,
+                                  FSimplices& fsimplices) {
+            fsimplices.emplace_back(tau, current_filtration_value);
 
             if (tau.size() >= max_dim + 1) {
                 return;
@@ -95,16 +95,16 @@ class NewVR final : public models::Filtration<NewVR> {
                 sigma.emplace_back(v);
                 std::ranges::sort(sigma);
 
-                Weight new_weight = current_weight;
+                FiltrationValue new_filtration_value = current_filtration_value;
                 for (auto u : tau) {
-                    new_weight =
-                        std::max(new_weight,
-                                 static_cast<Weight>(cloud.GetDistance(u, v)));
+                    new_filtration_value = std::max(
+                        new_filtration_value,
+                        static_cast<FiltrationValue>(cloud.GetDistance(u, v)));
                 }
 
                 auto m = TableLookup(graph, n, v);
-                NewAddCofaces(cloud, graph, max_dim, sigma, m, new_weight,
-                              wsimplices);
+                NewAddCofaces(cloud, graph, max_dim, sigma, m,
+                              new_filtration_value, fsimplices);
             }
         }
     };

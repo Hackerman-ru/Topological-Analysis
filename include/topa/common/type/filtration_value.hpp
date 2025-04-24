@@ -2,6 +2,6 @@
 
 namespace topa {
 
-using Weight = float;
+using FiltrationValue = float;
 
 }  // namespace topa

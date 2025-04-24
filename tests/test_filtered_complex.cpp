@@ -87,16 +87,16 @@ struct MockSimplexTreeImpl : models::SimplexTree<MockSimplexTreeImpl> {
 // Мок Filtration для тестирования
 struct MockFiltration : topa::models::Filtration<MockFiltration> {
     template <typename Cloud>
-    topa::models::Filtration<MockFiltration>::WSimplices Filter(
+    topa::models::Filtration<MockFiltration>::FSimplices Filter(
         const Cloud&) const {
         return {
-            topa::WSimplex({1}, 0.2),       // Вершина 1
-            topa::WSimplex({2}, 0.2),       // Вершина 2
-            topa::WSimplex({1, 2}, 0.2),    // Ребро 1-2
-            topa::WSimplex({0}, 0.3),       // Вершина 0
-            topa::WSimplex({0, 2}, 0.5),    // Ребро 0-2
-            topa::WSimplex({0, 1}, 1.0),    // Ребро 0-1
-            topa::WSimplex({0, 1, 2}, 1.0)  // 2-симплекс
+            topa::FSimplex({1}, 0.2),       // Вершина 1
+            topa::FSimplex({2}, 0.2),       // Вершина 2
+            topa::FSimplex({1, 2}, 0.2),    // Ребро 1-2
+            topa::FSimplex({0}, 0.3),       // Вершина 0
+            topa::FSimplex({0, 2}, 0.5),    // Ребро 0-2
+            topa::FSimplex({0, 1}, 1.0),    // Ребро 0-1
+            topa::FSimplex({0, 1, 2}, 1.0)  // 2-симплекс
         };
     }
 };
@@ -140,7 +140,7 @@ TEST_CASE("FilteredComplex facets", "[FilteredComplex]") {
     auto fc = FilteredComplex<MockSimplexTreeImpl>::From(cloud, filtration);
 
     SECTION("Facets for edge [0,1]") {
-        Position edge_pos = 5;  // Позиция ребра 0-1 в wsimplices_
+        Position edge_pos = 5;  // Позиция ребра 0-1 в fsimplices_
         auto facets = fc.GetFacetsPosition(edge_pos);
 
         REQUIRE(facets.size() == 2);

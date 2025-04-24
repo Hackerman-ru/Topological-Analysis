@@ -1,7 +1,7 @@
 #pragma once
 
 #include "vertex.hpp"
-#include "weight.hpp"
+#include "filtration_value.hpp"
 
 #include <algorithm>
 #include <vector>
@@ -12,11 +12,11 @@ namespace topa {
 
 using Simplex = std::vector<VertexId>;
 
-class WSimplex {
+class FSimplex {
    public:
-    WSimplex(Simplex simplex, Weight weight)
+    FSimplex(Simplex simplex, FiltrationValue filtration_value)
         : simplex_(std::move(simplex)),
-          weight_(std::move(weight)) {
+          filtration_value_(std::move(filtration_value)) {
         assert(std::ranges::is_sorted(simplex_.begin(), simplex_.end()));
     }
 
@@ -24,8 +24,8 @@ class WSimplex {
         return simplex_;
     }
 
-    const Weight& GetWeight() const {
-        return weight_;
+    const FiltrationValue& GetFiltrationValue() const {
+        return filtration_value_;
     }
 
     size_t Size() const {
@@ -36,16 +36,16 @@ class WSimplex {
         return simplex_.size() - 1;
     }
 
-    bool operator==(const WSimplex& other) const {
-        if (weight_ != other.weight_) {
+    bool operator==(const FSimplex& other) const {
+        if (filtration_value_ != other.filtration_value_) {
             return false;
         }
 
         return simplex_ == other.simplex_;
     }
 
-    bool operator!=(const WSimplex& other) const {
-        if (weight_ != other.weight_) {
+    bool operator!=(const FSimplex& other) const {
+        if (filtration_value_ != other.filtration_value_) {
             return true;
         }
 
@@ -56,9 +56,9 @@ class WSimplex {
         return simplex_ != other.simplex_;
     }
 
-    bool operator<(const WSimplex& other) const {
-        if (weight_ != other.weight_) {
-            return weight_ < other.weight_;
+    bool operator<(const FSimplex& other) const {
+        if (filtration_value_ != other.filtration_value_) {
+            return filtration_value_ < other.filtration_value_;
         }
 
         if (simplex_.size() != other.simplex_.size()) {
@@ -68,16 +68,16 @@ class WSimplex {
         return simplex_ < other.simplex_;
     }
 
-    bool operator<=(const WSimplex& other) const {
+    bool operator<=(const FSimplex& other) const {
         if (*this == other) {
             return true;
         }
         return *this < other;
     }
 
-    bool operator>(const WSimplex& other) const {
-        if (weight_ != other.weight_) {
-            return weight_ > other.weight_;
+    bool operator>(const FSimplex& other) const {
+        if (filtration_value_ != other.filtration_value_) {
+            return filtration_value_ > other.filtration_value_;
         }
 
         if (simplex_.size() != other.simplex_.size()) {
@@ -87,7 +87,7 @@ class WSimplex {
         return simplex_ > other.simplex_;
     }
 
-    bool operator>=(const WSimplex& other) const {
+    bool operator>=(const FSimplex& other) const {
         if (*this == other) {
             return true;
         }
@@ -96,7 +96,7 @@ class WSimplex {
 
    private:
     Simplex simplex_;
-    Weight weight_;
+    FiltrationValue filtration_value_;
 };
 
 }  // namespace topa

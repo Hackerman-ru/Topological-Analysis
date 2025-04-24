@@ -15,7 +15,7 @@ class FilteredComplex final
     using Positions = typename topa::models::FilteredComplex<
         topa::common::FilteredComplex<TreeImpl>>::Positions;
     using DimPoses = std::vector<Positions>;
-    using WSimplices = std::vector<WSimplex>;
+    using FSimplices = std::vector<FSimplex>;
     using Tree = TreeImpl;
 
    public:
@@ -23,16 +23,16 @@ class FilteredComplex final
     static FilteredComplex From(
         const models::Pointcloud<CloudImpl...>& cloud,
         const models::Filtration<FiltrationImpl>& filtration) {
-        WSimplices wsimplices = filtration.Filter(cloud);
-        return FilteredComplex(std::move(wsimplices), cloud.Size());
+        FSimplices fsimplices = filtration.Filter(cloud);
+        return FilteredComplex(std::move(fsimplices), cloud.Size());
     }
 
-    FilteredComplex(WSimplices wsimplices, std::size_t n_vertices)
-        : wsimplices_(std::move(wsimplices)),
+    FilteredComplex(FSimplices fsimplices, std::size_t n_vertices)
+        : fsimplices_(std::move(fsimplices)),
           tree_(n_vertices) {
-        assert(std::is_sorted(wsimplices_.begin(), wsimplices_.end()));
-        for (Position pos = 0; pos < wsimplices_.size(); ++pos) {
-            const auto& simplex = wsimplices_[pos].GetSimplex();
+        assert(std::is_sorted(fsimplices_.begin(), fsimplices_.end()));
+        for (Position pos = 0; pos < fsimplices_.size(); ++pos) {
+            const auto& simplex = fsimplices_[pos].GetSimplex();
             tree_.Add(simplex, pos);
             std::size_t dim = simplex.size() - 1;
             if (dim_poses_.size() <= dim) {
@@ -43,15 +43,15 @@ class FilteredComplex final
     }
 
     std::size_t Size() const {
-        return wsimplices_.size();
+        return fsimplices_.size();
     }
 
-    const WSimplices& GetWSimplices() const {
-        return wsimplices_;
+    const FSimplices& GetFSimplices() const {
+        return fsimplices_;
     }
 
     std::size_t GetSizeByPos(Position pos) const {
-        return wsimplices_[pos].Size();
+        return fsimplices_[pos].Size();
     }
 
     const Positions& GetPosesBySize(std::size_t size) const {
@@ -60,17 +60,17 @@ class FilteredComplex final
     }
 
     Positions GetFacetsPosition(Position pos) const {
-        const auto& simplex = wsimplices_[pos].GetSimplex();
+        const auto& simplex = fsimplices_[pos].GetSimplex();
         return tree_.GetFacetsPos(simplex);
     }
 
     Positions GetCofacetsPosition(Position pos) const {
-        const auto& simplex = wsimplices_[pos].GetSimplex();
+        const auto& simplex = fsimplices_[pos].GetSimplex();
         return tree_.GetCofacetsPos(simplex);
     }
 
    private:
-    WSimplices wsimplices_;
+    FSimplices fsimplices_;
     DimPoses dim_poses_;
     Tree tree_;
 };

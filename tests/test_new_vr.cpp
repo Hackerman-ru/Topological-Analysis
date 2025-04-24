@@ -59,7 +59,7 @@ TEST_CASE("NewVR filtration basic functionality", "[newvr]") {
 
         REQUIRE(simplices.size() == 1);
         CHECK(simplices[0].GetSimplex() == Simplex{0});
-        CHECK(simplices[0].GetWeight() == 0.0f);
+        CHECK(simplices[0].GetFiltrationValue() == 0.0f);
     }
 
     SECTION("Two points within radius form edge") {
@@ -69,9 +69,9 @@ TEST_CASE("NewVR filtration basic functionality", "[newvr]") {
 
         REQUIRE(simplices.size() == 3);
 
-        WSimplex s0({0}, 0.0f);
-        WSimplex s1({1}, 0.0f);
-        WSimplex s01({0, 1}, 1.0f);
+        FSimplex s0({0}, 0.0f);
+        FSimplex s1({1}, 0.0f);
+        FSimplex s01({0, 1}, 1.0f);
 
         CHECK(std::find(simplices.begin(), simplices.end(), s0) !=
               simplices.end());
@@ -102,7 +102,7 @@ TEST_CASE("NewVR filtration basic functionality", "[newvr]") {
         REQUIRE(simplices.size() == 7);
 
         // Проверяем наличие треугольника
-        WSimplex tri({0, 1, 2}, 1.0f);
+        FSimplex tri({0, 1, 2}, 1.0f);
         CHECK(std::find(simplices.begin(), simplices.end(), tri) !=
               simplices.end());
     }
@@ -138,7 +138,7 @@ TEST_CASE("NewVR filtration basic functionality", "[newvr]") {
         // 1. По весу (возрастание)
         // 2. По размеру (возрастание)
         // 3. Лексикографический порядок
-        std::vector<WSimplex> expected = {
+        std::vector<FSimplex> expected = {
             {{0}, 0.0f},    {{1}, 0.0f},    {{2}, 0.0f},      {{0, 2}, 1.0f},
             {{1, 2}, 1.0f}, {{0, 1}, 2.0f}, {{0, 1, 2}, 2.0f}};
 
