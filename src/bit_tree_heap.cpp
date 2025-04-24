@@ -1,7 +1,7 @@
 #include "fast/bit_tree_heap.hpp"
 
-#include <cassert>
 #include <algorithm>
+#include <cassert>
 
 namespace topa::fast {
 
