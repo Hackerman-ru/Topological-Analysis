@@ -70,7 +70,9 @@ class Harmonic final
         std::size_t FindVertexIndex(const Position& pos) const {
             const auto& vertices = complex_.GetPosesBySize(1);
             auto it = std::lower_bound(vertices.begin(), vertices.end(), pos);
-            return static_cast<std::size_t>(it - vertices.begin());
+            std::size_t idx = it - vertices.begin();
+            assert(vertices[idx] == pos);
+            return idx;
         }
 
         void ComputeVertices(const HarmonicCycle::Cycle& edges_cycle,
@@ -90,11 +92,15 @@ class Harmonic final
         }
 
         void UpdateCycle(HarmonicCycle& cycle) const {
-            ComputeVertices(cycle.birth_edges, cycle.birth_vertices);
-            ComputeVertices(cycle.death_edges, cycle.death_vertices);
             const auto& edges = complex_.GetPosesBySize(2);
-            cycle.birth_edges.resize(edges.size());
-            cycle.death_edges.resize(edges.size());
+            if (!cycle.birth_edges.empty()) {
+                ComputeVertices(cycle.birth_edges, cycle.birth_vertices);
+                cycle.birth_edges.resize(edges.size());
+            }
+            if (!cycle.death_edges.empty()) {
+                ComputeVertices(cycle.death_edges, cycle.death_vertices);
+                cycle.death_edges.resize(edges.size());
+            }
         }
 
         HarmonicCycles FilterPairs(PersistencePairRange auto&& pairs) const {
@@ -165,14 +171,18 @@ class Harmonic final
             auto rows = eigvectors.rows();
 
             if (birth) {
-                assert(rows_prev + 1 == rows);
-                eigvectors_prev.conservativeResize(rows, Eigen::NoChange);
-                eigvectors_prev.bottomRows(rows - rows_prev).setZero();
+                if (rows != 0 && rows_prev != 0) {
+                    assert(rows_prev + 1 == rows);
+                    eigvectors_prev.conservativeResize(rows, Eigen::NoChange);
+                    eigvectors_prev.bottomRows(rows - rows_prev).setZero();
+                }
                 VectorF harmonic = Separator::Separate(
                     std::move(eigvectors_prev), std::move(eigvectors));
                 return ConvertCycle(harmonic);
             } else {
-                assert(rows_prev == rows);
+                if (rows != 0 && rows_prev != 0) {
+                    assert(rows_prev == rows);
+                }
                 VectorF harmonic = Separator::Separate(
                     std::move(eigvectors), std::move(eigvectors_prev));
                 return ConvertCycle(harmonic);
