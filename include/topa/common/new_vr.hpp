@@ -31,18 +31,18 @@ class NewVR final : public models::Filtration<NewVR> {
        public:
         static WSimplices Filter(const Cloud& cloud, Weight max_radius,
                                  size_t max_dim) {
-            WSimplices simplices;
+            WSimplices wsimplices;
             const auto cloud_size = static_cast<VertexId>(cloud.Size());
             const auto graph = BuildAdjacencyGraph(cloud, max_radius);
 
             for (VertexId u = 0; u < cloud_size; ++u) {
                 Simplex tau = {u};
                 auto n = UpperNeighbors(graph, u);
-                NewAddCofaces(cloud, graph, max_dim, tau, n, 0.0f, simplices);
+                NewAddCofaces(cloud, graph, max_dim, tau, n, 0.0f, wsimplices);
             }
 
-            std::sort(simplices.begin(), simplices.end());
-            return simplices;
+            std::ranges::sort(wsimplices);
+            return wsimplices;
         }
 
        private:
@@ -82,8 +82,8 @@ class NewVR final : public models::Filtration<NewVR> {
                                   size_t max_dim, const Simplex& tau,
                                   const std::vector<VertexId>& n,
                                   Weight current_weight,
-                                  WSimplices& simplices) {
-            simplices.emplace_back(tau, current_weight);
+                                  WSimplices& wsimplices) {
+            wsimplices.emplace_back(tau, current_weight);
 
             if (tau.size() >= max_dim + 1) {
                 return;
@@ -104,7 +104,7 @@ class NewVR final : public models::Filtration<NewVR> {
 
                 auto m = TableLookup(graph, n, v);
                 NewAddCofaces(cloud, graph, max_dim, sigma, m, new_weight,
-                              simplices);
+                              wsimplices);
             }
         }
     };

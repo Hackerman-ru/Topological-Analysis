@@ -11,7 +11,7 @@ class FullVR final : public models::Filtration<FullVR> {
    public:
     template <typename... CloudImpl>
     WSimplices Filter(const models::Pointcloud<CloudImpl...>& cloud) const {
-        WSimplices simplices;
+        WSimplices wsimplices;
         const auto cloud_size = static_cast<VertexId>(cloud.Size());
 
         detail::FlatMatrix<Weight> dist(cloud_size, cloud_size);
@@ -24,23 +24,23 @@ class FullVR final : public models::Filtration<FullVR> {
         const std::size_t total =
             cloud_size + cloud_size * (cloud_size - 1) / 2 +
             cloud_size * (cloud_size - 1) * (cloud_size - 2) / 6;
-        simplices.reserve(total);
+        wsimplices.reserve(total);
 
         for (VertexId i = 0; i < cloud_size; ++i) {
-            simplices.emplace_back(Simplex{i}, 0.0f);
+            wsimplices.emplace_back(Simplex{i}, 0.0f);
             for (VertexId j = i + 1; j < cloud_size; ++j) {
                 const Weight d_ij = dist[i][j];
-                simplices.emplace_back(Simplex{i, j}, d_ij);
+                wsimplices.emplace_back(Simplex{i, j}, d_ij);
                 for (VertexId k = j + 1; k < cloud_size; ++k) {
                     const Weight max_d =
                         std::max({d_ij, dist[i][k], dist[j][k]});
-                    simplices.emplace_back(Simplex{i, j, k}, max_d);
+                    wsimplices.emplace_back(Simplex{i, j, k}, max_d);
                 }
             }
         }
 
-        std::sort(simplices.begin(), simplices.end());
-        return simplices;
+        std::ranges::sort(wsimplices);
+        return wsimplices;
     }
 };
 

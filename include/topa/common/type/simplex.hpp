@@ -3,6 +3,7 @@
 #include "vertex.hpp"
 #include "weight.hpp"
 
+#include <algorithm>
 #include <vector>
 #include <limits>
 #include <cassert>
@@ -16,7 +17,7 @@ class WSimplex {
     WSimplex(Simplex simplex, Weight weight)
         : simplex_(std::move(simplex)),
           weight_(std::move(weight)) {
-        assert(std::is_sorted(simplex_.begin(), simplex_.end()));
+        assert(std::ranges::is_sorted(simplex_.begin(), simplex_.end()));
     }
 
     const Simplex& GetSimplex() const {
@@ -43,6 +44,18 @@ class WSimplex {
         return simplex_ == other.simplex_;
     }
 
+    bool operator!=(const WSimplex& other) const {
+        if (weight_ != other.weight_) {
+            return true;
+        }
+
+        if (simplex_.size() != other.simplex_.size()) {
+            return true;
+        }
+
+        return simplex_ != other.simplex_;
+    }
+
     bool operator<(const WSimplex& other) const {
         if (weight_ != other.weight_) {
             return weight_ < other.weight_;
@@ -55,6 +68,13 @@ class WSimplex {
         return simplex_ < other.simplex_;
     }
 
+    bool operator<=(const WSimplex& other) const {
+        if (*this == other) {
+            return true;
+        }
+        return *this < other;
+    }
+
     bool operator>(const WSimplex& other) const {
         if (weight_ != other.weight_) {
             return weight_ > other.weight_;
@@ -65,6 +85,13 @@ class WSimplex {
         }
 
         return simplex_ > other.simplex_;
+    }
+
+    bool operator>=(const WSimplex& other) const {
+        if (*this == other) {
+            return true;
+        }
+        return *this > other;
     }
 
    private:
