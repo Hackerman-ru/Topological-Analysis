@@ -18,16 +18,23 @@ class ShiftSolver final
 
    public:
     static MatrixF FindKernel(const EigenMatrix& matrix) {
+        static constexpr float sigma = 1e-6f;
         const int n = matrix.rows();
         const float tol = std::pow(1e-1, precision);
 
         using OpType = Spectra::SparseSymShiftSolve<float>;
         OpType op(matrix);
 
-        Spectra::SymEigsShiftSolver<OpType> eigs(op, nev, ncv, 0.0f);
+        Spectra::SymEigsShiftSolver<OpType> eigs(op, nev, ncv, sigma);
         eigs.init();
-        size_t en = eigs.compute(Spectra::SortRule::LargestMagn, iterations,
-                                 tol, Spectra::SortRule::SmallestMagn);
+        size_t en = 0;
+        try {
+            en = eigs.compute(Spectra::SortRule::LargestMagn, iterations, tol,
+                              Spectra::SortRule::SmallestMagn);
+        } catch (...) {
+            // Some error, skipping
+            return {};
+        }
 
         if (en == 0 || eigs.info() != Spectra::CompInfo::Successful) {
             return {};
