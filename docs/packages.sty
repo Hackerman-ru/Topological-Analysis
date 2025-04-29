@@ -35,6 +35,8 @@
 \RequirePackage{multirow}
 % Очень мощный пакет для рисования различных диаграмм. Я подключаю из него только матрицы, стрелки и кривые.
 \RequirePackage[matrix,arrow,curve]{xy}
+\RequirePackage{tikz}
+\usetikzlibrary{positioning}
 
 % Изначально в amsmath при наборе матриц есть ограничение на максимальное количество столбцов матрицы. Здесь я его увеличиваю до 20.
 \setcounter{MaxMatrixCols}{20}
@@ -52,5 +54,7 @@
 \RequirePackage[ruled]{algorithm2e}
 
 % Пакет для кастомизации форматирования библиографии
-\RequirePackage[square,numbers]{natbib}
+\RequirePackage{csquotes}
+\RequirePackage[backend=biber, style=numeric]{biblatex}
+\addbibresource{bibl.bib}
 
