@@ -6,22 +6,22 @@
 
 namespace topa {
 
-struct HarmonicCycle {
-    using Cycle = std::vector<float>;
+using HarmonicCycle = std::vector<float>;
 
+struct HarmonicPair {
     Position birth;
-    Cycle birth_edges;
-    Cycle birth_vertices;
+    HarmonicCycle birth_edges;
+    HarmonicCycle birth_vertices;
     Position death;
-    Cycle death_edges;
-    Cycle death_vertices;
+    HarmonicCycle death_edges;
+    HarmonicCycle death_vertices;
 
-    HarmonicCycle(Position b, Position d)
+    HarmonicPair(Position b, Position d)
         : birth(b),
           death(d) {};
 
-    bool operator==(const HarmonicCycle& other) const = default;
-    bool operator<(const HarmonicCycle& other) const {
+    bool operator==(const HarmonicPair& other) const = default;
+    bool operator<(const HarmonicPair& other) const {
         auto lifetime = Lifetime();
         auto other_lifetime = other.Lifetime();
         if (lifetime != other_lifetime) {
@@ -40,8 +40,8 @@ struct HarmonicCycle {
 };
 
 template <typename R>
-concept HarmonicCycleRange =
+concept HarmonicPairRange =
     std::ranges::input_range<R> &&
-    std::same_as<std::ranges::range_value_t<R>, HarmonicCycle>;
+    std::same_as<std::ranges::range_value_t<R>, HarmonicPair>;
 
 }  // namespace topa

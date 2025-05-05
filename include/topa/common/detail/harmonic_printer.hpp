@@ -1,13 +1,13 @@
 #pragma once
 
-#include "common/type/harmonic_cycle.hpp"
+#include "common/type/harmonic_pair.hpp"
 
 #include <iostream>
 #include <iomanip>
 
 namespace topa::detail {
 
-void PrintCycles(HarmonicCycleRange auto&& reps) {
+void PrintCycles(HarmonicPairRange auto&& reps) {
     constexpr auto BLUE = "\033[94m";
     constexpr auto CYAN = "\033[96m";
     constexpr auto GREEN = "\033[92m";

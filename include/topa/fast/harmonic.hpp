@@ -16,11 +16,11 @@ template <typename SolverImpl, typename SeparatorImpl, std::size_t percent>
 class Harmonic final
     : public models::Harmonic<Harmonic<SolverImpl, SeparatorImpl, percent>> {
     static_assert(percent <= 100);
-    using HarmonicCycles = std::vector<HarmonicCycle>;
+    using HarmonicPairs = std::vector<HarmonicPair>;
 
    public:
     template <typename Complex, PersistencePairRange R>
-    static HarmonicCycles Compute(Complex&& complex, R&& pairs) {
+    static HarmonicPairs Compute(Complex&& complex, R&& pairs) {
         Wrapper wrapper(std::forward<Complex>(complex));
         return wrapper.Compute(std::forward<R>(pairs));
     }
@@ -40,20 +40,19 @@ class Harmonic final
         }
 
         template <PersistencePairRange R>
-        HarmonicCycles Compute(R&& pairs) const {
-            HarmonicCycles cycles = FilterPairs(std::forward<R>(pairs));
-            detail::Execute(
-                cycles.begin(), cycles.end(), [this](HarmonicCycle& cycle) {
-                    cycle.birth_edges = ComputeCycle(cycle.birth, true);
-                    cycle.death_edges = ComputeCycle(cycle.death, false);
-                    UpdateCycle(cycle);
-                });
-            return cycles;
+        HarmonicPairs Compute(R&& persistence_pairs) const {
+            HarmonicPairs pairs =
+                FilterPairs(std::forward<R>(persistence_pairs));
+            detail::Execute(pairs.begin(), pairs.end(),
+                            [this](HarmonicPair& pair) {
+                                ComputeHarmonicCycles(pair);
+                            });
+            return pairs;
         }
 
        private:
-        static HarmonicCycle::Cycle ConvertCycle(const VectorF& harmonic) {
-            HarmonicCycle::Cycle cycle;
+        static HarmonicCycle ConvertCycle(const VectorF& harmonic) {
+            HarmonicCycle cycle;
             cycle.reserve(harmonic.size());
             std::ranges::copy(harmonic, std::back_inserter(cycle));
             return cycle;
@@ -67,6 +66,32 @@ class Harmonic final
             return result;
         }
 
+        void ComputeHarmonicCycles(HarmonicPair& pair) const {
+            MatrixF h_x = Solver::FindKernel(Laplacian(pair.birth));
+            MatrixF h_y = Solver::FindKernel(Laplacian(pair.death - 1));
+            MatrixF h_z = Solver::FindKernel(Laplacian(pair.death));
+
+            VectorF high_representative =
+                Separator::Separate(std::move(h_z), std::move(h_y));
+            pair.death_edges = ConvertCycle(high_representative);
+            if (pair.death_edges.empty()) {
+                return;
+            }
+            VectorF low_representative = Separator::Separate(
+                std::move(high_representative), std::move(h_x));
+            pair.birth_edges = ConvertCycle(std::move(low_representative));
+
+            const auto& edges = complex_.GetPosesBySize(2);
+            if (!pair.birth_edges.empty()) {
+                ComputeVertices(pair.birth_edges, pair.birth_vertices);
+                pair.birth_edges.resize(edges.size());
+            }
+            if (!pair.death_edges.empty()) {
+                ComputeVertices(pair.death_edges, pair.death_vertices);
+                pair.death_edges.resize(edges.size());
+            }
+        }
+
         std::size_t FindVertexIndex(const Position& pos) const {
             const auto& vertices = complex_.GetPosesBySize(1);
             auto it = std::lower_bound(vertices.begin(), vertices.end(), pos);
@@ -75,8 +100,8 @@ class Harmonic final
             return idx;
         }
 
-        void ComputeVertices(const HarmonicCycle::Cycle& edges_cycle,
-                             HarmonicCycle::Cycle& vertices_cycle) const {
+        void ComputeVertices(const HarmonicCycle& edges_cycle,
+                             HarmonicCycle& vertices_cycle) const {
             const auto& vertices = complex_.GetPosesBySize(1);
             const auto& edges = complex_.GetPosesBySize(2);
             vertices_cycle.assign(vertices.size(), 0.0f);
@@ -91,31 +116,20 @@ class Harmonic final
             }
         }
 
-        void UpdateCycle(HarmonicCycle& cycle) const {
-            const auto& edges = complex_.GetPosesBySize(2);
-            if (!cycle.birth_edges.empty()) {
-                ComputeVertices(cycle.birth_edges, cycle.birth_vertices);
-                cycle.birth_edges.resize(edges.size());
-            }
-            if (!cycle.death_edges.empty()) {
-                ComputeVertices(cycle.death_edges, cycle.death_vertices);
-                cycle.death_edges.resize(edges.size());
-            }
-        }
-
-        HarmonicCycles FilterPairs(PersistencePairRange auto&& pairs) const {
-            HarmonicCycles cycles;
-            for (const auto& pair : pairs) {
+        HarmonicPairs FilterPairs(
+            PersistencePairRange auto&& persistence_pairs) const {
+            HarmonicPairs pairs;
+            for (const auto& pair : persistence_pairs) {
                 assert(pair.death > pair.birth);
                 if (pair.death - pair.birth > 2 &&
                     complex_.GetSizeByPos(pair.birth) == 2) {
-                    cycles.emplace_back(pair.birth, pair.death);
+                    pairs.emplace_back(pair.birth, pair.death);
                 }
             }
-            std::sort(cycles.begin(), cycles.end());
-            std::size_t keep = Percent(cycles.size());
-            cycles.erase(cycles.begin() + keep, cycles.end());
-            return cycles;
+            std::sort(pairs.begin(), pairs.end());
+            std::size_t keep = Percent(pairs.size());
+            pairs.erase(pairs.begin() + keep, pairs.end());
+            return pairs;
         }
 
         std::vector<Position> CutIndices(std::size_t size,
@@ -161,32 +175,6 @@ class Harmonic final
 
             EigenMatrix l1 = b0t * b0 + b1 * b1t;
             return l1;
-        }
-
-        HarmonicCycle::Cycle ComputeCycle(Position pos, bool birth) const {
-            MatrixF eigvectors_prev = Solver::FindKernel(Laplacian(pos - 1));
-            MatrixF eigvectors = Solver::FindKernel(Laplacian(pos));
-
-            auto rows_prev = eigvectors_prev.rows();
-            auto rows = eigvectors.rows();
-
-            if (birth) {
-                if (rows != 0 && rows_prev != 0) {
-                    assert(rows_prev + 1 == rows);
-                    eigvectors_prev.conservativeResize(rows, Eigen::NoChange);
-                    eigvectors_prev.bottomRows(rows - rows_prev).setZero();
-                }
-                VectorF harmonic = Separator::Separate(
-                    std::move(eigvectors_prev), std::move(eigvectors));
-                return ConvertCycle(harmonic);
-            } else {
-                if (rows != 0 && rows_prev != 0) {
-                    assert(rows_prev == rows);
-                }
-                VectorF harmonic = Separator::Separate(
-                    std::move(eigvectors), std::move(eigvectors_prev));
-                return ConvertCycle(harmonic);
-            }
         }
 
        private:
