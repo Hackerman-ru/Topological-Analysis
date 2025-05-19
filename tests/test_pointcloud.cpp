@@ -1,4 +1,5 @@
 #include "common/pointcloud.hpp"
+#include "common/eucledian_distance.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
@@ -40,8 +41,10 @@ TEST_CASE("Pointcloud basic functionality", "[Pointcloud]") {
     SECTION("Distance calculations") {
         cloud.Add({0.0, 0.0, 0.0});
         cloud.Add({3.0, 4.0, 0.0});
+        auto points = cloud.GetPoints();
 
-        REQUIRE_THAT(cloud.GetDistance(0, 1), WithinAbs(25.0, 1e-6));
+        REQUIRE_THAT(EucledianDistance::GetDistance(points[0], points[1]),
+                     WithinAbs(25.0, 1e-6));
     }
 }
 
@@ -82,9 +85,11 @@ TEST_CASE("Stress tests for Pointcloud", "[Pointcloud][stress]") {
                        static_cast<Pointcloud::CoordinateType>(i)});
         }
 
+        auto points = cloud.GetPoints();
         for (size_t i = 0; i < 1000; ++i) {
             for (size_t j = i + 1; j < 1000; ++j) {
-                auto dist = cloud.GetDistance(i, j);
+                auto dist =
+                    EucledianDistance::GetDistance(points[i], points[j]);
                 REQUIRE(dist >= 0);
             }
         }

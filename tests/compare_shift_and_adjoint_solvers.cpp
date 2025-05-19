@@ -2,6 +2,7 @@
 #include "fast/sa_solver.hpp"
 
 #include "common/pointcloud.hpp"
+#include "common/eucledian_distance.hpp"
 #include "common/filtered_complex.hpp"
 #include "common/svd_separator.hpp"
 #include "common/detail/harmonic_printer.hpp"
@@ -23,7 +24,8 @@ TEST_CASE("Solver comparisons") {
     Pointcloud cloud =
         Pointcloud::Load(DATA_DIR "/pointclouds/100.off").value();
     std::cout << "Pointcloud size = " << cloud.Size() << '\n';
-    auto complex = FilteredComplex<FullTreeOpt>::From(cloud, FullVR());
+    auto complex =
+        FilteredComplex<FullTreeOpt>::From(cloud, FullVR<EucledianDistance>());
     auto pairs = DoubleTwist<SparseMatrix, BitTreeHeap>::Compute(complex);
 
     BENCHMARK("SelfAdjointSolver") {

@@ -214,14 +214,13 @@ TEST_CASE("SimplexTree basic operations") {
         st.Add({0, 2}, 4);
 
         SECTION("Sparse hint") {
-            auto cofacets =
-                st.GetCofacetsPos({0, 1}, SimplexTree::Hint::Sparse);
+            auto cofacets = st.GetCofacetsPos({0, 1});
             std::vector<Position> expected = {2, 3};
             REQUIRE_THAT(cofacets, UnorderedRangeEquals(expected));
         }
 
         SECTION("Dense hint") {
-            auto cofacets = st.GetCofacetsPos({0, 1}, SimplexTree::Hint::Dense);
+            auto cofacets = st.GetCofacetsPos({0, 1});
             std::vector<Position> expected = {2, 3};
             REQUIRE_THAT(cofacets, UnorderedRangeEquals(expected));
         }
@@ -239,7 +238,7 @@ TEST_CASE("SimplexTree basic operations") {
             st.Add({0, 1}, 1);
             st.Add({0, 2}, 2);
 
-            auto cofacets = st.GetCofacetsPos({}, SimplexTree::Hint::Sparse);
+            auto cofacets = st.GetCofacetsPos({});
             std::vector<Position> expected = {0, 1, 2};
         }
 

@@ -277,6 +277,7 @@ TEST_CASE("PosHeap maintains order") {
 #include "common/filtered_complex.hpp"
 #include "fast/bit_tree_heap.hpp"
 #include "fast/sparse_matrix.hpp"
+#include "common/eucledian_distance.hpp"
 
 #include <algorithm>
 
@@ -286,7 +287,8 @@ using namespace topa::fast;
 TEST_CASE("Real data") {
     Pointcloud cloud =
         Pointcloud::Load(DATA_DIR "/pointclouds/100.off").value();
-    auto complex = FilteredComplex<FullTreeOpt>::From(cloud, FullVR());
+    auto complex =
+        FilteredComplex<FullTreeOpt>::From(cloud, FullVR<EucledianDistance>());
     auto twist_result = Twist<SparseMatrix, BitTreeHeap>::Compute(complex);
     auto double_twist_result =
         DoubleTwist<SparseMatrix, BitTreeHeap>::Compute(complex);

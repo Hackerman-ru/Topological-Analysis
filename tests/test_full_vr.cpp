@@ -3,7 +3,9 @@
 
 #include "fast/full_vr.hpp"
 
-namespace topa::common {
+using namespace topa;
+using namespace topa::fast;
+
 namespace {
 
 // Определяем мок для Pointcloud
@@ -27,8 +29,13 @@ class MockCloud : public models::Pointcloud<MockCloud, MockTraits> {
         return points_;
     }
 
-    Distance GetDistance(std::size_t i, std::size_t j) const {
-        // Задаем фиксированные расстояния для тестов
+   private:
+    Points points_;
+};
+
+class Distance : public models::Distance<Distance> {
+   public:
+    static FiltrationValue GetDistance(std::size_t i, std::size_t j) {
         if (i > j)
             std::swap(i, j);
         if (i == 0 && j == 1)
@@ -39,18 +46,12 @@ class MockCloud : public models::Pointcloud<MockCloud, MockTraits> {
             return 3.0f;
         return 0.0f;
     }
-
-   private:
-    Points points_;
 };
 
 }  // namespace
 
-using namespace topa;
-using namespace topa::fast;
-
 TEST_CASE("FullVR generates correct simplices count", "[FullVR]") {
-    FullVR vr;
+    FullVR<Distance> vr;
     MockCloud cloud;
 
     SECTION("Single point cloud") {
@@ -76,7 +77,7 @@ TEST_CASE("FullVR generates correct simplices count", "[FullVR]") {
 }
 
 TEST_CASE("FullVR computes correct filtration_values", "[FullVR]") {
-    FullVR vr;
+    FullVR<Distance> vr;
     MockCloud cloud;
 
     cloud.Add(1);
@@ -90,7 +91,7 @@ TEST_CASE("FullVR computes correct filtration_values", "[FullVR]") {
 }
 
 TEST_CASE("FullVR sorts simplices correctly", "[FullVR]") {
-    FullVR vr;
+    FullVR<Distance> vr;
     MockCloud cloud;
 
     cloud.Add(1);
@@ -112,7 +113,7 @@ TEST_CASE("FullVR sorts simplices correctly", "[FullVR]") {
 }
 
 TEST_CASE("FullVR creates correct simplex structure", "[FullVR]") {
-    FullVR vr;
+    FullVR<Distance> vr;
     MockCloud cloud;
 
     cloud.Add(1);
@@ -133,5 +134,3 @@ TEST_CASE("FullVR creates correct simplex structure", "[FullVR]") {
     // Проверяем треугольник
     REQUIRE(simplices[6].GetSimplex() == Simplex{0, 1, 2});
 }
-
-}  // namespace topa::common

@@ -5,6 +5,9 @@
 #include <algorithm>
 #include <cmath>
 
+using namespace topa;
+using namespace topa::common;
+
 namespace {
 
 struct TestCloudTraits {
@@ -25,28 +28,29 @@ class TestCloud : public topa::models::Pointcloud<TestCloud, TestCloudTraits> {
         return points_.size();
     }
 
-    Distance GetDistance(topa::VertexId u, topa::VertexId v) const {
+   private:
+    Points points_;
+};
+
+class Distance : public models::Distance<Distance> {
+   public:
+    static FiltrationValue GetDistance(std::vector<float> lhs,
+                                       std::vector<float> rhs) {
         float dist = 0.0f;
-        for (size_t i = 0; i < points_[u].size(); ++i) {
-            float diff = points_[u][i] - points_[v][i];
+        for (size_t i = 0; i < lhs.size(); ++i) {
+            float diff = lhs[i] - rhs[i];
             dist += diff * diff;
         }
         return std::sqrt(dist);
     }
-
-   private:
-    Points points_;
 };
 
 }  // namespace
 
 TEST_CASE("NewVR filtration basic functionality", "[newvr]") {
-    using namespace topa;
-    using namespace topa::common;
-
     SECTION("Empty point cloud returns empty filtration") {
         TestCloud cloud({});
-        NewVR vr(1.0f, 1);
+        NewVR<Distance> vr(1.0f, 1);
         auto simplices = vr.Filter(cloud);
 
         REQUIRE(simplices.empty());
@@ -54,7 +58,7 @@ TEST_CASE("NewVR filtration basic functionality", "[newvr]") {
 
     SECTION("Single point generates only 0-simplex") {
         TestCloud cloud({{0.0f, 0.0f}});
-        NewVR vr(1.0f, 2);
+        NewVR<Distance> vr(1.0f, 2);
         auto simplices = vr.Filter(cloud);
 
         REQUIRE(simplices.size() == 1);
@@ -64,7 +68,7 @@ TEST_CASE("NewVR filtration basic functionality", "[newvr]") {
 
     SECTION("Two points within radius form edge") {
         TestCloud cloud({{0.0f}, {1.0f}});  // Расстояние 1.0
-        NewVR vr(1.0f, 1);
+        NewVR<Distance> vr(1.0f, 1);
         auto simplices = vr.Filter(cloud);
 
         REQUIRE(simplices.size() == 3);
@@ -83,7 +87,7 @@ TEST_CASE("NewVR filtration basic functionality", "[newvr]") {
 
     SECTION("Max radius limits edges") {
         TestCloud cloud({{0.0f}, {2.0f}});  // Расстояние 2.0
-        NewVR vr(1.9f, 1);
+        NewVR<Distance> vr(1.9f, 1);
         auto simplices = vr.Filter(cloud);
 
         REQUIRE(simplices.size() == 2);  // Только 0-симплексы
@@ -95,7 +99,7 @@ TEST_CASE("NewVR filtration basic functionality", "[newvr]") {
             // Равносторонний треугольник с длиной стороны ~1.0
         });
 
-        NewVR vr(1.05f, 2);  // Достаточно для всех рёбер
+        NewVR<Distance> vr(1.05f, 2);  // Достаточно для всех рёбер
         auto simplices = vr.Filter(cloud);
 
         // Ожидаем 7 симплексов: 3 точки, 3 ребра, 1 треугольник
@@ -110,7 +114,7 @@ TEST_CASE("NewVR filtration basic functionality", "[newvr]") {
     SECTION("Max dimension limits simplex size") {
         TestCloud cloud({{0.0f, 0.0f}, {1.0f, 0.0f}, {0.5f, 0.866f}});
 
-        NewVR vr(1.05f, 1);  // Только до 1-мерных
+        NewVR<Distance> vr(1.05f, 1);  // Только до 1-мерных
         auto simplices = vr.Filter(cloud);
 
         // 3 точки + 3 ребра = 6 симплексов
@@ -131,7 +135,7 @@ TEST_CASE("NewVR filtration basic functionality", "[newvr]") {
             {1.0f}   // Расстояние 1.0 от 0 и 1.0 от 1
         });
 
-        NewVR vr(2.1f, 2);
+        NewVR<Distance> vr(2.1f, 2);
         auto simplices = vr.Filter(cloud);
 
         // Проверяем порядок сортировки:
