@@ -26,7 +26,7 @@ class Pointcloud final
     void Add(Point point);
     size_t Size() const;
     const Points& GetPoints() const;
-    Distance GetDistance(size_t i, size_t j) const;
+    void Clear();
 
    private:
     size_t dim_;

@@ -3,8 +3,8 @@
 #include "common/type/low.hpp"
 #include "common/coboundary_matrix.hpp"
 #include "common/filtered_boundary_matrix.hpp"
-#include "common/process_matrix.hpp"
-#include "common/low_to_pairs.hpp"
+#include "common/detail/process_matrix.hpp"
+#include "common/detail/low_to_pairs.hpp"
 
 #include "models/persistence_diagram.hpp"
 #include "models/filtered_complex.hpp"
@@ -13,27 +13,27 @@
 
 namespace topa::fast {
 
-template <typename MatrixImpl, typename HeapImpl>
+template <typename Matrix, typename HeapImpl>
 class DoubleTwist final
-    : models::PersistenceDiagram<DoubleTwist<MatrixImpl, HeapImpl>> {
+    : models::PersistenceDiagram<DoubleTwist<Matrix, HeapImpl>> {
     using Arglows = std::vector<Position>;
     using Lows = std::vector<Low>;
     using PersistencePairs = typename models::PersistenceDiagram<
-        DoubleTwist<MatrixImpl, HeapImpl>>::PersistencePairs;
+        DoubleTwist<Matrix, HeapImpl>>::PersistencePairs;
 
    public:
     template <typename ComplexImpl>
     static PersistencePairs Compute(
         const models::FilteredComplex<ComplexImpl>& complex) {
-        MatrixImpl coboundary_matrix =
-            common::CoboundaryMatrix<MatrixImpl, ComplexImpl>(complex);
+        Matrix coboundary_matrix =
+            common::CoboundaryMatrix<Matrix, ComplexImpl>(complex);
         Lows lows = Reduce(coboundary_matrix, complex);
-        return common::LowToPairs(std::move(lows));
+        return detail::LowToPairs(std::move(lows));
     }
 
    private:
     template <typename ComplexImpl>
-    static Lows Reduce(models::Matrix<MatrixImpl>& matrix,
+    static Lows Reduce(models::Matrix<Matrix>& matrix,
                        const models::FilteredComplex<ComplexImpl>& complex) {
         const auto n = complex.Size();
         // 1. Reducing coboundary matrix
@@ -43,7 +43,7 @@ class DoubleTwist final
         std::array copositions = {
             complex.GetPosesBySize(1) | std::views::transform(inv),
             complex.GetPosesBySize(2) | std::views::transform(inv)};
-        Lows lows = common::ProcessMatrix<MatrixImpl, HeapImpl>(
+        Lows lows = detail::ProcessMatrix<Matrix, HeapImpl>(
             matrix, n, copositions | std::views::join);
         // 2. Computing saved poses
         std::vector<Position> saved_poses;
@@ -53,12 +53,12 @@ class DoubleTwist final
             }
         }
         // 3. Reducing filtered boundary matrix
-        MatrixImpl boundary_matrix =
-            common::BoundaryMatrixFiltered<MatrixImpl, ComplexImpl>(
+        Matrix boundary_matrix =
+            common::BoundaryMatrixFiltered<Matrix, ComplexImpl>(
                 complex, std::move(saved_poses));
         std::array positions = {complex.GetPosesBySize(3) | std::views::all,
                                 complex.GetPosesBySize(2) | std::views::all};
-        return common::ProcessMatrix<MatrixImpl, HeapImpl>(
+        return detail::ProcessMatrix<Matrix, HeapImpl>(
             boundary_matrix, n, positions | std::views::join);
     }
 };

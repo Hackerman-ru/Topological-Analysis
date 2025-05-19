@@ -19,15 +19,8 @@ class SimplexTree final : public models::SimplexTree<SimplexTree> {
     struct Node {
         Node* previous;
         VertexId vertex_id;
-        Node* sibling = nullptr;
         Position pos = kUnknownPos;
         NextMap next = NextMap();
-    };
-
-   public:
-    enum class Hint {
-        Sparse,
-        Dense,
     };
 
    public:
@@ -45,16 +38,13 @@ class SimplexTree final : public models::SimplexTree<SimplexTree> {
     void Add(VertexRange auto&& simplex, Position pos) {
         assert(std::is_sorted(simplex.begin(), simplex.end()));
         Node* current = nullptr;
-        size_t depth = 1;
 
         for (const VertexId& vid : simplex) {
             Node** next = current ? &current->next[vid] : &root_[vid];
             if (!*next) {
                 *next = new Node{current, vid};
-                LinkToList(*next, depth, vid);
             }
             current = *next;
-            ++depth;
         }
 
         if (current != nullptr) {
@@ -116,8 +106,7 @@ class SimplexTree final : public models::SimplexTree<SimplexTree> {
         return GetFacetsPos(std::views::all(simplex));
     }
 
-    Positions GetCofacetsPos(VertexRange auto&& simplex,
-                             Hint hint = Hint::Sparse) const {
+    Positions GetCofacetsPos(VertexRange auto&& simplex) const {
         assert(std::is_sorted(simplex.begin(), simplex.end()));
         Positions results;
         const size_t k = simplex.size();
@@ -128,10 +117,6 @@ class SimplexTree final : public models::SimplexTree<SimplexTree> {
                     results.emplace_back(node->pos);
                 }
             }
-            return results;
-        }
-
-        if (k + 1 >= lists_heads_.size()) {
             return results;
         }
 
@@ -146,66 +131,6 @@ class SimplexTree final : public models::SimplexTree<SimplexTree> {
             }
         }
 
-        switch (hint) {
-            case Hint::Sparse: {
-                const auto& depth_map = lists_heads_[k + 1];
-                auto it = depth_map.find(simplex.back());
-                if (it == depth_map.end()) {
-                    break;
-                }
-                FindSparseCofacets(base, it->second, results);
-            } break;
-            case Hint::Dense:
-                FindDenseCofacets(simplex, results);
-                break;
-        }
-
-        return results;
-    }
-
-    Positions GetCofacetsPos(std::initializer_list<VertexId> simplex,
-                             Hint hint = Hint::Sparse) const {
-        return GetCofacetsPos(std::views::all(simplex), hint);
-    }
-
-   private:
-    static bool IsValidNode(Node* node);
-    static bool IsSubsimplex(Node* node, Node* subnode, size_t skips);
-
-    void DeleteSubtree(Node* node);
-    void LinkToList(Node* node, size_t depth, VertexId id);
-
-    Node* TraverseDownwards(VertexRange auto&& simplex,
-                            Node* start = nullptr) const {
-        assert(std::is_sorted(simplex.begin(), simplex.end()));
-        Node* current = start;
-        for (const VertexId& vid : simplex) {
-            if (current == nullptr) {
-                current = root_[vid];
-            } else {
-                auto it = current->next.find(vid);
-                if (it == current->next.end()) {
-                    return nullptr;
-                }
-                current = it->second;
-            }
-            if (current == nullptr) {
-                return nullptr;
-            }
-        }
-        return current;
-    }
-
-    void FindSparseCofacets(Node* base, Node* node, Positions& results) const {
-        while (node != nullptr) {
-            if (IsValidNode(node) && IsSubsimplex(node, base, 1)) {
-                results.emplace_back(node->pos);
-            }
-            node = node->sibling;
-        }
-    }
-
-    void FindDenseCofacets(const auto& simplex, Positions& results) const {
         const VertexId n = root_.size();
         auto it = simplex.begin();
 
@@ -237,11 +162,43 @@ class SimplexTree final : public models::SimplexTree<SimplexTree> {
                 results.emplace_back(pos);
             }
         }
+
+        return results;
+    }
+
+    Positions GetCofacetsPos(std::initializer_list<VertexId> simplex) const {
+        return GetCofacetsPos(std::views::all(simplex));
+    }
+
+   private:
+    static bool IsValidNode(Node* node);
+    static bool IsSubsimplex(Node* node, Node* subnode, size_t skips);
+
+    void DeleteSubtree(Node* node);
+
+    Node* TraverseDownwards(VertexRange auto&& simplex,
+                            Node* start = nullptr) const {
+        assert(std::is_sorted(simplex.begin(), simplex.end()));
+        Node* current = start;
+        for (const VertexId& vid : simplex) {
+            if (current == nullptr) {
+                current = root_[vid];
+            } else {
+                auto it = current->next.find(vid);
+                if (it == current->next.end()) {
+                    return nullptr;
+                }
+                current = it->second;
+            }
+            if (current == nullptr) {
+                return nullptr;
+            }
+        }
+        return current;
     }
 
    private:
     RootNode root_;
-    std::vector<NextMap> lists_heads_;
 };
 
 }  // namespace topa::common

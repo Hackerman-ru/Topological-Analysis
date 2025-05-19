@@ -52,18 +52,8 @@ const Pointcloud::Points& Pointcloud::GetPoints() const {
     return points_;
 }
 
-Pointcloud::Distance Pointcloud::GetDistance(size_t i, size_t j) const {
-    CoordinateType sum = 0;
-    CoordinateType c = 0;
-    for (size_t k = 0; k < dim_; ++k) {
-        CoordinateType diff = points_[i][k] - points_[j][k];
-        CoordinateType y = (diff * diff) - c;
-        CoordinateType temp = sum + y;
-        CoordinateType compensation = (temp - sum) - y;
-        c = -compensation;
-        sum = temp;
-    }
-    return sum;
+void Pointcloud::Clear() {
+    points_.clear();
 }
 
 }  // namespace topa::common

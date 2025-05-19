@@ -6,13 +6,13 @@
 #include "models/matrix.hpp"
 #include "models/pos_heap.hpp"
 
-namespace topa::common {
+namespace topa::detail {
 
 template <typename MatrixImpl, typename HeapImpl>
 void ProcessPosition(Position pos, models::Matrix<MatrixImpl>& matrix,
                      models::PosHeap<HeapImpl>& fast_column,
                      std::vector<Position>& arglows) {
-    if (!matrix.Contains(pos)) {
+    if (!matrix.Contains(pos) || matrix[pos].empty()) {
         return;
     }
 
@@ -27,12 +27,11 @@ void ProcessPosition(Position pos, models::Matrix<MatrixImpl>& matrix,
     if (!fast_column.IsEmpty()) {
         arglows[pivot] = pos;
         matrix.Erase(pivot);
+        matrix[pos] = fast_column.PopAll();
+    } else {
     }
-
-    matrix[pos] = fast_column.PopAll();
 }
 
-// std::views::concat will appear only in C++26
 template <typename MatrixImpl, typename HeapImpl,
           std::ranges::input_range PosRange>
 std::vector<Low> ProcessMatrix(models::Matrix<MatrixImpl>& matrix,
@@ -57,4 +56,4 @@ std::vector<Low> ProcessMatrix(models::Matrix<MatrixImpl>& matrix,
     return lows;
 }
 
-}  // namespace topa::common
+}  // namespace topa::detail

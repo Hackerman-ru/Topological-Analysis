@@ -6,10 +6,9 @@
 
 namespace topa::common {
 
-template <typename MatrixImpl, typename ComplexImpl>
-MatrixImpl CoboundaryMatrix(
-    const models::FilteredComplex<ComplexImpl>& complex) {
-    MatrixImpl matrix;
+template <typename Matrix, typename ComplexImpl>
+Matrix CoboundaryMatrix(const models::FilteredComplex<ComplexImpl>& complex) {
+    Matrix matrix;
     const auto size = complex.Size();
     matrix.Reserve(size);
 

@@ -5,7 +5,7 @@
 
 #include <vector>
 
-namespace topa::common {
+namespace topa::detail {
 
 std::vector<PersistencePair> LowToPairs(LowRange auto&& lows) {
     std::vector<PersistencePair> pairs;
@@ -18,4 +18,4 @@ std::vector<PersistencePair> LowToPairs(LowRange auto&& lows) {
     return pairs;
 }
 
-}  // namespace topa::common
+}  // namespace topa::detail

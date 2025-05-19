@@ -14,7 +14,7 @@ class FilteredComplex final
    public:
     using Positions = typename topa::models::FilteredComplex<
         topa::common::FilteredComplex<TreeImpl>>::Positions;
-    using DimPoses = std::vector<Positions>;
+    using SizePoses = std::vector<Positions>;
     using FSimplices = std::vector<FSimplex>;
     using Tree = TreeImpl;
 
@@ -29,16 +29,16 @@ class FilteredComplex final
 
     FilteredComplex(FSimplices fsimplices, std::size_t n_vertices)
         : fsimplices_(std::move(fsimplices)),
+          size_poses_(1, Positions()),
           tree_(n_vertices) {
         assert(std::is_sorted(fsimplices_.begin(), fsimplices_.end()));
         for (Position pos = 0; pos < fsimplices_.size(); ++pos) {
             const auto& simplex = fsimplices_[pos].GetSimplex();
             tree_.Add(simplex, pos);
-            std::size_t dim = simplex.size() - 1;
-            if (dim_poses_.size() <= dim) {
-                dim_poses_.resize(dim + 1);
+            if (size_poses_.size() <= simplex.size()) {
+                size_poses_.resize(simplex.size() + 1);
             }
-            dim_poses_[dim].emplace_back(pos);
+            size_poses_[simplex.size()].emplace_back(pos);
         }
     }
 
@@ -50,13 +50,19 @@ class FilteredComplex final
         return fsimplices_;
     }
 
+    FiltrationValue GetFiltrationValue(Position pos) const {
+        return fsimplices_[pos].GetFiltrationValue();
+    }
+
     std::size_t GetSizeByPos(Position pos) const {
         return fsimplices_[pos].Size();
     }
 
     const Positions& GetPosesBySize(std::size_t size) const {
-        assert(dim_poses_.size() >= size);
-        return dim_poses_.at(size - 1);
+        if (size >= size_poses_.size()) {
+            return size_poses_[0];
+        }
+        return size_poses_[size];
     }
 
     Positions GetFacetsPosition(Position pos) const {
@@ -71,7 +77,7 @@ class FilteredComplex final
 
    private:
     FSimplices fsimplices_;
-    DimPoses dim_poses_;
+    SizePoses size_poses_;
     Tree tree_;
 };
 

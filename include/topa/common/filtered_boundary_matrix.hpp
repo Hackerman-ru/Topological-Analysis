@@ -4,11 +4,11 @@
 
 namespace topa::common {
 
-template <typename MatrixImpl, typename ComplexImpl>
-MatrixImpl BoundaryMatrixFiltered(
+template <typename Matrix, typename ComplexImpl>
+Matrix BoundaryMatrixFiltered(
     const models::FilteredComplex<ComplexImpl>& complex,
     PositionRange auto&& positions) {
-    MatrixImpl matrix;
+    Matrix matrix;
     matrix.Reserve(positions.size());
 
     for (const auto& pos : positions) {
@@ -20,8 +20,8 @@ MatrixImpl BoundaryMatrixFiltered(
     return matrix;
 }
 
-template <typename MatrixImpl, typename ComplexImpl>
-MatrixImpl BoundaryMatrixFiltered(
+template <typename Matrix, typename ComplexImpl>
+Matrix BoundaryMatrixFiltered(
     const models::FilteredComplex<ComplexImpl>& complex,
     std::initializer_list<Position> positions) {
     return BoundaryMatrixFiltered(complex, std::views::all(positions));

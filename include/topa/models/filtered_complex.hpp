@@ -1,6 +1,7 @@
 #pragma once
 
 #include "common/type/position.hpp"
+#include "common/type/filtration_value.hpp"
 
 #include <vector>
 
@@ -13,6 +14,9 @@ class FilteredComplex {
 
     std::size_t Size() const {
         return static_cast<const DerivedImpl*>(this)->Size();
+    }
+    FiltrationValue GetFiltrationValue(Position pos) const {
+        return static_cast<const DerivedImpl*>(this)->GetFiltrationValue(pos);
     }
     std::size_t GetSizeByPos(Position pos) const {
         return static_cast<const DerivedImpl*>(this)->GetSizeByPos(pos);

@@ -21,9 +21,6 @@ class Pointcloud {
     const Points& GetPoints() const {
         return static_cast<const DerivedImpl*>(this)->GetPoints();
     }
-    Distance GetDistance(std::size_t i, std::size_t j) const {
-        return static_cast<const DerivedImpl*>(this)->GetDistance(i, j);
-    }
 };
 
 }  // namespace topa::models

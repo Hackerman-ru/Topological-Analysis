@@ -13,10 +13,8 @@ SimplexTree::~SimplexTree() {
 }
 
 SimplexTree::SimplexTree(SimplexTree&& other) noexcept
-    : root_(std::move(other.root_)),
-      lists_heads_(std::move(other.lists_heads_)) {
+    : root_(std::move(other.root_)) {
     other.root_.clear();
-    other.lists_heads_.clear();
 }
 
 SimplexTree& SimplexTree::operator=(SimplexTree&& other) noexcept {
@@ -26,10 +24,7 @@ SimplexTree& SimplexTree::operator=(SimplexTree&& other) noexcept {
         }
 
         root_ = std::move(other.root_);
-        lists_heads_ = std::move(other.lists_heads_);
-
         other.root_.clear();
-        other.lists_heads_.clear();
     }
     return *this;
 }
@@ -66,16 +61,6 @@ void SimplexTree::DeleteSubtree(Node* node) {
         DeleteSubtree(child);
     }
     delete node;
-}
-
-void SimplexTree::LinkToList(Node* node, size_t depth, VertexId id) {
-    if (lists_heads_.size() <= depth) {
-        lists_heads_.resize(depth + 1);
-    }
-    // (iterator to (key, value); bool)
-    auto pair = lists_heads_[depth].try_emplace(id, nullptr);
-    node->sibling = (*pair.first).second;
-    lists_heads_[depth][id] = node;
 }
 
 }  // namespace topa::common
