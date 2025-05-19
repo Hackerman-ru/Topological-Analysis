@@ -6,7 +6,7 @@ function(configure_main_target TARGET_NAME)
     target_include_directories(${TARGET_NAME}
         PUBLIC
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/topa>
-            $<INSTALL_INTERFACE:include>
+            $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     )
 
     # Фичи
@@ -19,6 +19,10 @@ function(configure_main_target TARGET_NAME)
         target_compile_definitions(${TARGET_NAME} PUBLIC TOPA_USE_TBB)
         target_link_libraries(${TARGET_NAME} PUBLIC TBB::tbb)
     endif()
+
+    set_property(TARGET ${TARGET_NAME} PROPERTY EXPORT_PROPERTIES 
+        "TOPA_ENABLE_EIGEN;TOPA_ENABLE_TBB"
+    )
 
     # Clang-tidy
     if(TOPA_ENABLE_CLANG_TIDY)

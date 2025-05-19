@@ -1,0 +1,24 @@
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
+install(
+    TARGETS topa
+    EXPORT topaTargets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
+
+install(
+    DIRECTORY include/topa
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    FILES_MATCHING PATTERN "*.hpp"
+)
+
+install(
+    EXPORT topaTargets
+    FILE topaTargets.cmake
+    NAMESPACE topa::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/topa
+)
