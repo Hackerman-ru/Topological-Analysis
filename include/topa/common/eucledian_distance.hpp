@@ -1,6 +1,6 @@
 #pragma once
 
-#include "models/distance.hpp"
+#include "topa/models/distance.hpp"
 
 #include <cassert>
 #include <cmath>

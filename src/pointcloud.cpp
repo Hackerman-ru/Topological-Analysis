@@ -1,4 +1,4 @@
-#include "common/pointcloud.hpp"
+#include "topa/common/pointcloud.hpp"
 
 #include <fstream>
 #include <sstream>

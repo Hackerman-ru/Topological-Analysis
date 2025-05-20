@@ -1,5 +1,4 @@
-#include "fast/twist.hpp"
-#include "fast/double_twist.hpp"
+#include "topa/topa.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>
@@ -270,14 +269,6 @@ TEST_CASE("PosHeap maintains order") {
         REQUIRE(all == std::vector<Position>{1, 2, 4});
     }
 }
-
-#include "common/pointcloud.hpp"
-#include "fast/full_vr.hpp"
-#include "fast/full_tree_opt.hpp"
-#include "common/filtered_complex.hpp"
-#include "fast/bit_tree_heap.hpp"
-#include "fast/sparse_matrix.hpp"
-#include "common/eucledian_distance.hpp"
 
 #include <algorithm>
 

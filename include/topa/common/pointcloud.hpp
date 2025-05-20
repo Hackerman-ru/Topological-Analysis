@@ -1,7 +1,7 @@
 #pragma once
 
-#include "common/detail/flat_matrix.hpp"
-#include "models/pointcloud.hpp"
+#include "topa/common/detail/flat_matrix.hpp"
+#include "topa/models/pointcloud.hpp"
 
 #include <optional>
 #include <string>

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "common/type/position.hpp"
-#include "common/type/filtration_value.hpp"
+#include "topa/common/type/position.hpp"
+#include "topa/common/type/filtration_value.hpp"
 
 #include <vector>
 

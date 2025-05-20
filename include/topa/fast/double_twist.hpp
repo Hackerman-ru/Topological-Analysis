@@ -1,15 +1,15 @@
 #pragma once
 
-#include "common/type/low.hpp"
-#include "common/coboundary_matrix.hpp"
-#include "common/filtered_boundary_matrix.hpp"
-#include "common/detail/process_matrix.hpp"
-#include "common/detail/low_to_pairs.hpp"
+#include "topa/common/type/low.hpp"
+#include "topa/common/coboundary_matrix.hpp"
+#include "topa/common/filtered_boundary_matrix.hpp"
+#include "topa/common/detail/process_matrix.hpp"
+#include "topa/common/detail/low_to_pairs.hpp"
 
-#include "models/persistence_diagram.hpp"
-#include "models/filtered_complex.hpp"
-#include "models/matrix.hpp"
-#include "models/pos_heap.hpp"
+#include "topa/models/persistence_diagram.hpp"
+#include "topa/models/filtered_complex.hpp"
+#include "topa/models/matrix.hpp"
+#include "topa/models/pos_heap.hpp"
 
 namespace topa::fast {
 

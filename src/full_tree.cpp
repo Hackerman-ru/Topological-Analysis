@@ -1,4 +1,4 @@
-#include "fast/full_tree.hpp"
+#include "topa/fast/full_tree.hpp"
 
 namespace topa::fast {
 

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "common/type/simplex.hpp"
-#include "models/pointcloud.hpp"
+#include "topa/common/type/simplex.hpp"
+#include "topa/models/pointcloud.hpp"
 
 namespace topa::models {
 

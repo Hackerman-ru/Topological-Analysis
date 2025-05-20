@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common/type/harmonic_pair.hpp"
+#include "topa/common/type/harmonic_pair.hpp"
 
 #include <iostream>
 #include <iomanip>

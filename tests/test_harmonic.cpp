@@ -1,16 +1,4 @@
-#include "fast/harmonic.hpp"
-
-#include "common/pointcloud.hpp"
-#include "common/eucledian_distance.hpp"
-#include "common/filtered_complex.hpp"
-#include "common/svd_separator.hpp"
-#include "common/detail/harmonic_printer.hpp"
-#include "fast/full_vr.hpp"
-#include "fast/flat_tree.hpp"
-#include "fast/double_twist.hpp"
-#include "fast/bit_tree_heap.hpp"
-#include "fast/sparse_matrix.hpp"
-#include "fast/sai_solver.hpp"
+#include "topa/topa.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 

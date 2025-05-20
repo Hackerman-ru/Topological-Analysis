@@ -1,9 +1,9 @@
 #pragma once
 
-#include "common/type/persistence_pair.hpp"
-#include "common/type/filtration_value.hpp"
+#include "topa/common/type/persistence_pair.hpp"
+#include "topa/common/type/filtration_value.hpp"
 
-#include "models/filtered_complex.hpp"
+#include "topa/models/filtered_complex.hpp"
 
 #include <vector>
 #include <set>

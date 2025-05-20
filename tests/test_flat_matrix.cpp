@@ -1,4 +1,4 @@
-#include "common/detail/flat_matrix.hpp"
+#include "topa/topa.hpp"
 
 #include <algorithm>
 #include <catch2/catch_test_macros.hpp>

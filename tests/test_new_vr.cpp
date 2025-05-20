@@ -1,4 +1,4 @@
-#include "common/new_vr.hpp"
+#include "topa/topa.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <vector>
@@ -26,6 +26,10 @@ class TestCloud : public topa::models::Pointcloud<TestCloud, TestCloudTraits> {
 
     std::size_t Size() const {
         return points_.size();
+    }
+
+    const Points& GetPoints() const {
+        return points_;
     }
 
    private:

@@ -1,4 +1,4 @@
-#include "common/set_heap.hpp"
+#include "topa/topa.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <random>

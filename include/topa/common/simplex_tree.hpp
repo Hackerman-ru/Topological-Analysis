@@ -1,6 +1,6 @@
 #pragma once
 
-#include "models/simplex_tree.hpp"
+#include "topa/models/simplex_tree.hpp"
 
 #include <algorithm>
 #include <functional>

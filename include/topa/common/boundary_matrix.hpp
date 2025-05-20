@@ -1,6 +1,6 @@
 #pragma once
 
-#include "models/filtered_complex.hpp"
+#include "topa/models/filtered_complex.hpp"
 
 namespace topa::common {
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "models/matrix.hpp"
+#include "topa/models/matrix.hpp"
 
 #include <unordered_map>
 

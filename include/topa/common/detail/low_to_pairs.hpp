@@ -1,7 +1,7 @@
 #pragma once
 
-#include "common/type/low.hpp"
-#include "common/type/persistence_pair.hpp"
+#include "topa/common/type/low.hpp"
+#include "topa/common/type/persistence_pair.hpp"
 
 #include <vector>
 

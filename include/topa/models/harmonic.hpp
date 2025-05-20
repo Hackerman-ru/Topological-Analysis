@@ -1,7 +1,7 @@
 #pragma once
 
-#include "common/type/harmonic_pair.hpp"
-#include "common/type/persistence_pair.hpp"
+#include "topa/common/type/harmonic_pair.hpp"
+#include "topa/common/type/persistence_pair.hpp"
 
 namespace topa::models {
 

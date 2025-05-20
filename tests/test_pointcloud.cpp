@@ -1,5 +1,4 @@
-#include "common/pointcloud.hpp"
-#include "common/eucledian_distance.hpp"
+#include "topa/topa.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_floating_point.hpp>

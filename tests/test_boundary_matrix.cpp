@@ -1,8 +1,4 @@
-#include "common/boundary_matrix.hpp"
-#include "common/coboundary_matrix.hpp"
-#include "common/filtered_boundary_matrix.hpp"
-
-#include "models/matrix.hpp"
+#include "topa/topa.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/matchers/catch_matchers_vector.hpp>

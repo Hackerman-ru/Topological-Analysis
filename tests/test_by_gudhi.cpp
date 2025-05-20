@@ -4,17 +4,7 @@
 // #include <gudhi/distance_functions.h>
 // #include <gudhi/Persistent_cohomology.h>
 
-// #include <common/pointcloud.hpp>
-// #include <fast/full_vr.hpp>
-// #include <fast/full_tree_opt.hpp>
-// #include <common/new_vr.hpp>
-// #include <fast/flat_tree.hpp>
-// #include <common/filtered_complex.hpp>
-// #include <fast/double_twist.hpp>
-// #include <fast/sparse_matrix.hpp>
-// #include <fast/bit_tree_heap.hpp>
-// #include <common/detail/pairs_to_filtration_values.hpp>
-// #include <common/eucledian_distance.hpp>
+// #include "topa/topa.hpp"
 
 // #include <catch2/catch_test_macros.hpp>
 // #include <catch2/benchmark/catch_benchmark.hpp>

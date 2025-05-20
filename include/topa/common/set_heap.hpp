@@ -1,6 +1,6 @@
 #pragma once
 
-#include "models/pos_heap.hpp"
+#include "topa/models/pos_heap.hpp"
 
 #include <set>
 

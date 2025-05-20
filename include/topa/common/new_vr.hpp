@@ -1,10 +1,10 @@
 #pragma once
 
-#include "common/detail/executor.hpp"
+#include "topa/common/detail/executor.hpp"
 
-#include "models/pointcloud.hpp"
-#include "models/distance.hpp"
-#include "models/filtration.hpp"
+#include "topa/models/pointcloud.hpp"
+#include "topa/models/distance.hpp"
+#include "topa/models/filtration.hpp"
 
 #ifdef TOPA_USE_TBB
 #include <tbb/combinable.h>

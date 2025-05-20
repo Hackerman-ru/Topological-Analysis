@@ -1,4 +1,4 @@
-#include "common/simplex_tree.hpp"
+#include "topa/common/simplex_tree.hpp"
 
 namespace topa::common {
 

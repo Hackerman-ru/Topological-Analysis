@@ -1,12 +1,4 @@
-#include "fast/twist.hpp"
-#include "fast/double_twist.hpp"
-
-#include "common/detail/flat_matrix.hpp"
-#include "common/simplex_tree.hpp"
-#include "fast/full_tree_opt.hpp"
-#include "common/filtered_complex.hpp"
-#include "fast/bit_tree_heap.hpp"
-#include "fast/sparse_matrix.hpp"
+#include "topa/topa.hpp"
 
 #include <catch2/benchmark/catch_benchmark.hpp>
 #include <catch2/catch_test_macros.hpp>

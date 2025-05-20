@@ -1,15 +1,4 @@
-#include "fast/twist.hpp"
-#include "fast/double_twist.hpp"
-
-#include "common/pointcloud.hpp"
-#include "common/eucledian_distance.hpp"
-#include "fast/full_vr.hpp"
-#include "common/new_vr.hpp"
-#include "common/filtered_complex.hpp"
-#include "fast/flat_tree.hpp"
-#include "fast/double_twist.hpp"
-#include "fast/sparse_matrix.hpp"
-#include "fast/bit_tree_heap.hpp"
+#include "topa/topa.hpp"
 
 #include <catch2/benchmark/catch_benchmark.hpp>
 #include <catch2/catch_test_macros.hpp>

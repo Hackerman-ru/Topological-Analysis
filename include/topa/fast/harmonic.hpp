@@ -1,12 +1,12 @@
 #pragma once
 
-#include "common/detail/executor.hpp"
-#include "common/oriented_boundary_matrix.hpp"
+#include "topa/common/detail/executor.hpp"
+#include "topa/common/oriented_boundary_matrix.hpp"
 
-#include "models/harmonic.hpp"
-#include "models/filtered_complex.hpp"
-#include "models/separator.hpp"
-#include "models/solver.hpp"
+#include "topa/models/harmonic.hpp"
+#include "topa/models/filtered_complex.hpp"
+#include "topa/models/separator.hpp"
+#include "topa/models/solver.hpp"
 
 #include <cassert>
 

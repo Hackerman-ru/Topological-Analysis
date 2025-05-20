@@ -1,5 +1,4 @@
-#include "fast/full_tree.hpp"
-#include "fast/full_tree_opt.hpp"
+#include "topa/topa.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_template_test_macros.hpp>

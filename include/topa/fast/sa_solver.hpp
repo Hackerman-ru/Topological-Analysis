@@ -1,6 +1,6 @@
 #pragma once
 
-#include "models/solver.hpp"
+#include "topa/models/solver.hpp"
 
 #include <eigen3/Eigen/Eigenvalues>
 

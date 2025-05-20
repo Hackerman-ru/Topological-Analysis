@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common/type/eigen_matrix.hpp"
+#include "topa/common/type/eigen_matrix.hpp"
 
 namespace topa::models {
 

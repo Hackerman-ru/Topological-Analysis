@@ -1,6 +1,6 @@
 #pragma once
 
-#include "models/separator.hpp"
+#include "topa/models/separator.hpp"
 
 #include <eigen3/Eigen/SVD>
 

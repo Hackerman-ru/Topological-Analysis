@@ -1,10 +1,10 @@
 #pragma once
 
-#include "common/type/low.hpp"
+#include "topa/common/type/low.hpp"
 
-#include "models/filtered_complex.hpp"
-#include "models/matrix.hpp"
-#include "models/pos_heap.hpp"
+#include "topa/models/filtered_complex.hpp"
+#include "topa/models/matrix.hpp"
+#include "topa/models/pos_heap.hpp"
 
 namespace topa::detail {
 

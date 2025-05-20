@@ -1,6 +1,6 @@
 #pragma once
 
-#include "common/type/filtration_value.hpp"
+#include "topa/common/type/filtration_value.hpp"
 
 namespace topa::models {
 

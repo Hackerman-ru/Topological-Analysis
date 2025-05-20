@@ -1,10 +1,10 @@
 #pragma once
 
-#include "models/pointcloud.hpp"
-#include "models/filtration.hpp"
-#include "models/filtered_complex.hpp"
-#include "models/simplex_tree.hpp"
-#include "common/type/simplex.hpp"
+#include "topa/models/pointcloud.hpp"
+#include "topa/models/filtration.hpp"
+#include "topa/models/filtered_complex.hpp"
+#include "topa/models/simplex_tree.hpp"
+#include "topa/common/type/simplex.hpp"
 
 namespace topa::common {
 

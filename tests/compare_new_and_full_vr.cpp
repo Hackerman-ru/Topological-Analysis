@@ -1,6 +1,4 @@
-#include "common/new_vr.hpp"
-#include "fast/full_vr.hpp"
-#include "models/pointcloud.hpp"
+#include "topa/topa.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/benchmark/catch_benchmark.hpp>

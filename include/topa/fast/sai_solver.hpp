@@ -1,6 +1,6 @@
 #pragma once
 
-#include "models/solver.hpp"
+#include "topa/models/solver.hpp"
 
 #include <Spectra/SymEigsSolver.h>
 #include <Spectra/MatOp/SparseSymMatProd.h>

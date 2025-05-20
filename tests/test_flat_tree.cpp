@@ -1,5 +1,4 @@
-#include "fast/flat_tree.hpp"
-#include "common/type/simplex.hpp"
+#include "topa/topa.hpp"
 
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_all.hpp>

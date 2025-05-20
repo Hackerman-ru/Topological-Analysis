@@ -1,4 +1,4 @@
-#include "fast/sparse_matrix.hpp"
+#include "topa/fast/sparse_matrix.hpp"
 
 #include <cassert>
 
