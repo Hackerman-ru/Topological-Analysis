@@ -11,7 +11,7 @@ install(
 )
 
 install(
-    DIRECTORY include/topa
+    DIRECTORY include
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
     FILES_MATCHING PATTERN "*.hpp"
 )
