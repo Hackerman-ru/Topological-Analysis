@@ -2,11 +2,6 @@ function(configure_main_target TARGET_NAME)
     # Источники и инклуды
     file(GLOB_RECURSE TOPA_SOURCES "src/*.cpp")
     target_sources(${TARGET_NAME} PRIVATE ${TOPA_SOURCES})
-    
-    target_include_directories(${TARGET_NAME}
-        PRIVATE
-            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/topa>
-    )
 
     target_include_directories(${TARGET_NAME}
         PUBLIC
@@ -69,11 +64,6 @@ function(configure_tests MAIN_TARGET)
     foreach(test_source ${TEST_SOURCES})
         get_filename_component(test_name ${test_source} NAME_WE)
         add_executable(${test_name} ${test_source})
-        
-        target_include_directories(${test_name}
-            PRIVATE
-                ${CMAKE_CURRENT_SOURCE_DIR}/include/topa
-        )
 
         target_link_libraries(${test_name}
             PRIVATE
