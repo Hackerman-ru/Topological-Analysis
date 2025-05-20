@@ -11,7 +11,7 @@ __Topa__ — библиотекой для работы в области топ
 Ниже приведён пример использования библиотеки для вычисления устойчивых пар фильтрованного симплициального комплекса Вьеториса-Рипса, построенного из облака точек в формате __OFF__.
 
 ```cpp
-#include "topa/topa.hpp"
+#include <topa/topa.hpp>
 
 using namespace topa;
 using namespace topa::common;
@@ -43,7 +43,7 @@ void test_full() {
 Библиотека также поддерживает относительно быстрое вычисление гармонических представителей
 
 ```cpp
-#include "topa/topa.hpp"
+#include <topa/topa.hpp>
 
 using namespace topa;
 using namespace topa::common;
