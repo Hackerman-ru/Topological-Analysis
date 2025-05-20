@@ -4,8 +4,13 @@ function(configure_main_target TARGET_NAME)
     target_sources(${TARGET_NAME} PRIVATE ${TOPA_SOURCES})
     
     target_include_directories(${TARGET_NAME}
-        PUBLIC
+        PRIVATE
             $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/topa>
+    )
+
+    target_include_directories(${TARGET_NAME}
+        PUBLIC
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
             $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
     )
 
@@ -65,6 +70,11 @@ function(configure_tests MAIN_TARGET)
         get_filename_component(test_name ${test_source} NAME_WE)
         add_executable(${test_name} ${test_source})
         
+        target_include_directories(${test_name}
+            PRIVATE
+                ${CMAKE_CURRENT_SOURCE_DIR}/include/topa
+        )
+
         target_link_libraries(${test_name}
             PRIVATE
                 ${MAIN_TARGET}
