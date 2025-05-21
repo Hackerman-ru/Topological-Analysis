@@ -1,0 +1,89 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 28,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "base",
+            "hidden": true,
+            "generator": "Unix Makefiles",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "TOPA_BUILD_TESTS": "ON",
+                "TOPA_ENABLE_CLANG_TIDY": "ON",
+                "TOPA_ENABLE_ASAN": "OFF",
+                "TOPA_ENABLE_TSAN": "OFF",
+                "CMAKE_CXX_FLAGS": "-Wall -Wextra -Wpedantic"
+            }
+        },
+        {
+            "name": "Debug",
+            "displayName": "Debug Configuration",
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "Debug+ASan",
+            "displayName": "Debug with AddressSanitizer",
+            "inherits": "Debug",
+            "cacheVariables": {
+                "TOPA_ENABLE_ASAN": "ON",
+                "TOPA_ENABLE_TSAN": "OFF"
+            }
+        },
+        {
+            "name": "Debug+TSan",
+            "displayName": "Debug with ThreadSanitizer",
+            "inherits": "Debug",
+            "cacheVariables": {
+                "TOPA_ENABLE_ASAN": "OFF",
+                "TOPA_ENABLE_TSAN": "ON"
+            }
+        },
+        {
+            "name": "Release",
+            "displayName": "Release Configuration",
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "CMAKE_CXX_FLAGS_RELEASE": "-O3 -DNDEBUG -march=native -fpic -ftree-vectorize"
+            }
+        },
+        {
+            "name": "RelWithDebInfo",
+            "displayName": "Release with Debug Info",
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "CMAKE_CXX_FLAGS_RELWITHDEBINFO": "-O2 -g -march=native"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "debug",
+            "configurePreset": "Debug"
+        },
+        {
+            "name": "debug-asan",
+            "configurePreset": "Debug+ASan"
+        },
+        {
+            "name": "debug-tsan",
+            "configurePreset": "Debug+TSan"
+        },
+        {
+            "name": "release",
+            "configurePreset": "Release"
+        },
+        {
+            "name": "relwithdebinfo",
+            "configurePreset": "RelWithDebInfo"
+        }
+    ]
+}
